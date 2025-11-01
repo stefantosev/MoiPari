@@ -1,3 +1,5 @@
+package com.example.backend.model.H2
+
 import com.example.backend.model.Category
 import com.example.backend.model.Enums.PAYMENT
 import com.example.backend.model.Expense
@@ -5,8 +7,7 @@ import com.example.backend.model.User
 import com.example.backend.repository.CategoryRepository
 import com.example.backend.repository.ExpenseRepository
 import com.example.backend.repository.UserRepository
-import jakarta.annotation.PostConstruct
-import jakarta.transaction.Transactional
+import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
@@ -15,11 +16,10 @@ class DataInitializer(
     private val userRepository: UserRepository,
     private val categoryRepository: CategoryRepository,
     private val expenseRepository: ExpenseRepository
-){
-     @PostConstruct
-     @Transactional
-     fun init(vararg args: String?) {
-        // Check if data already exists to avoid duplicates
+) : CommandLineRunner {
+
+    override fun run(vararg args: String?) {
+
         if (userRepository.count() > 0) {
             println("Database already initialized, skipping...")
             return
@@ -66,5 +66,3 @@ class DataInitializer(
         println("H2 database initialized with sample data!")
     }
 }
-
-
