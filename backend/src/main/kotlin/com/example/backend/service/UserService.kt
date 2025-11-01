@@ -1,7 +1,9 @@
 package com.example.backend.service
 
 import com.example.backend.model.User
+import org.springframework.stereotype.Service
 
+@Service
 interface UserService {
     fun createUser(user: User) : User
     fun deleteUser(id: Int)
