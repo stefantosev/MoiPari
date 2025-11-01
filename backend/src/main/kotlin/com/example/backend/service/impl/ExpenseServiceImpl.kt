@@ -4,8 +4,10 @@ import com.example.backend.model.Enums.PAYMENT
 import com.example.backend.model.Expense
 import com.example.backend.repository.ExpenseRepository
 import com.example.backend.service.ExpenseService
+import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
+@Service
 class ExpenseServiceImpl (private val expenseRepository: ExpenseRepository) : ExpenseService {
 
     override fun createExpense(expense: Expense): Expense {
