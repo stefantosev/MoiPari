@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service
 
 @Service
 interface ExpenseService {
-    fun createExpense(expense: Expense) : Expense
-    fun deleteExpense(id:Int)
-    fun updateExpense(id: Int, updateExpense: Expense) : Expense?
-    fun getExpenseById(id: Int) : Expense
-    fun getExpenses() : List<Expense>
+    fun createExpense(expense: Expense): Expense
+    fun deleteExpense(id: Int)
+    fun updateExpense(id: Int, updateExpense: Expense): Expense?
+    fun getExpenseById(id: Int): Expense
+    fun getExpenses(): List<Expense>
 }
