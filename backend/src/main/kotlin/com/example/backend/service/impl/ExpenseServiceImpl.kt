@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class ExpenseServiceImpl (private val expenseRepository: ExpenseRepository) : ExpenseService {
+class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository) : ExpenseService {
 
     override fun createExpense(expense: Expense): Expense {
         return expenseRepository.save(
@@ -31,15 +31,15 @@ class ExpenseServiceImpl (private val expenseRepository: ExpenseRepository) : Ex
         expenseRepository.findById(id)
             .orElseThrow { Exception("Expense not found") }.let { existingExpense ->
 
-            val updatedExpense = existingExpense.copy(
-                amount = updateExpense.amount,
-                description = updateExpense.description,
-                date = updateExpense.date,
-                paymentMethod = updateExpense.paymentMethod,
-                categories = updateExpense.categories,
-            )
-            return expenseRepository.save(updatedExpense)
-        }
+                val updatedExpense = existingExpense.copy(
+                    amount = updateExpense.amount,
+                    description = updateExpense.description,
+                    date = updateExpense.date,
+                    paymentMethod = updateExpense.paymentMethod,
+                    categories = updateExpense.categories,
+                )
+                return expenseRepository.save(updatedExpense)
+            }
     }
 
     override fun getExpenseById(id: Int): Expense {
