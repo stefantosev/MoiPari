@@ -39,7 +39,7 @@ class ExpenseController(private val expenseService: ExpenseService) {
     }
 
 
-    @DeleteMapping("{/id}")
+    @DeleteMapping("/{id}")
     fun deleteExpense(@PathVariable id: Int): ResponseEntity<Void> {
         expenseService.deleteExpense(id)
         return ResponseEntity.noContent().build()
