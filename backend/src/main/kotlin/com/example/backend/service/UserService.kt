@@ -5,9 +5,9 @@ import org.springframework.stereotype.Service
 
 @Service
 interface UserService {
-    fun createUser(user: User) : User
+    fun createUser(user: User): User
     fun deleteUser(id: Int)
-    fun updateUser(id: Int, updateUser: User) : User?
-    fun getUsers() : List<User>
-    fun getUserById(id: Int) : User
+    fun updateUser(id: Int, updateUser: User): User?
+    fun getUsers(): List<User>
+    fun getUserById(id: Int): User
 }
