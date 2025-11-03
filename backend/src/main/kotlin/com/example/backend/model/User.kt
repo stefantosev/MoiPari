@@ -9,15 +9,15 @@ import java.time.LocalDateTime
 
 
 @Entity
-@Table( name = "users")
+@Table(name = "users")
 @NoArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-data class User (
+data class User(
 
     @Id
-    @GeneratedValue( strategy = GenerationType.IDENTITY)
-    val id: Int=0,
-    val email: String= "",
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int = 0,
+    val email: String = "",
     val password: String = "",
     val name: String? = null,
     val currency: String = "MKD",
