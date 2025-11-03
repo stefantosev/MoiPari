@@ -4,6 +4,7 @@ import com.example.backend.model.Expense
 import com.example.backend.service.ExpenseService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -22,7 +23,7 @@ class ExpenseController(private val expenseService: ExpenseService) {
     }
 
     @GetMapping("/{id}")
-    fun getExpenseById(id: Int): ResponseEntity<Expense> {
+    fun getExpenseById(@PathVariable id: Int): ResponseEntity<Expense> {
         return ResponseEntity.ok(expenseService.getExpenseById(id))
     }
 
@@ -37,6 +38,7 @@ class ExpenseController(private val expenseService: ExpenseService) {
         return ResponseEntity.ok(expenseService.updateExpense(id, expense))
     }
 
+    @DeleteMapping("{/id}")
     fun deleteExpense(@PathVariable id: Int): ResponseEntity<Void> {
         expenseService.deleteExpense(id)
         return ResponseEntity.noContent().build()

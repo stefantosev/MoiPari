@@ -6,7 +6,7 @@ import com.example.backend.service.UserService
 import org.springframework.stereotype.Service
 
 @Service
-class UserServiceImpl (private val userRepository: UserRepository) : UserService {
+class UserServiceImpl(private val userRepository: UserRepository) : UserService {
     override fun createUser(user: User): User {
         return userRepository.save(
             User(
@@ -25,13 +25,13 @@ class UserServiceImpl (private val userRepository: UserRepository) : UserService
         userRepository.findById(id)
             .orElseThrow { Exception("User not found") }.let { existingUser ->
 
-            val updatedUser = existingUser.copy(
-                name = updateUser.name,
-                email = updateUser.email,
-                password = updateUser.password,
-            )
-            return userRepository.save(updatedUser)
-        }
+                val updatedUser = existingUser.copy(
+                    name = updateUser.name,
+                    email = updateUser.email,
+                    password = updateUser.password,
+                )
+                return userRepository.save(updatedUser)
+            }
     }
 
     override fun getUsers(): List<User> {
