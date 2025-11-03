@@ -19,6 +19,7 @@ data class Budget (
     val year: Int=0,
 
 
-    @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     var user: User? = null,
 )

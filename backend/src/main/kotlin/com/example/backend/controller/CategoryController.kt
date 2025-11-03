@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/categories")
+@RequestMapping("/api/categories")
 class CategoryController(private val categoryService: CategoryService) {
 
     @PostMapping
@@ -17,7 +17,7 @@ class CategoryController(private val categoryService: CategoryService) {
         return ResponseEntity.status(HttpStatus.CREATED).body(createCategory)
     }
 
-    @PostMapping("/{id}")
+    @PutMapping("/{id}")
     fun updateCategory(@PathVariable id: Int, @RequestBody category: Category): ResponseEntity<Category> {
         val updatedCategory = categoryService.updateCategory(id, category)
         return ResponseEntity.ok(updatedCategory!!)
