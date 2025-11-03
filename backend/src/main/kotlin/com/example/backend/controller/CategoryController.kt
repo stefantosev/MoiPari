@@ -11,6 +11,18 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/categories")
 class CategoryController(private val categoryService: CategoryService) {
 
+    @PostMapping
+    fun createCategory(@RequestBody category: Category): ResponseEntity<Category> {
+        val createCategory = categoryService.createCategory(category)
+        return ResponseEntity.status(HttpStatus.CREATED).body(createCategory)
+    }
+
+    @PutMapping("/{id}")
+    fun updateCategory(@PathVariable id: Int, @RequestBody category: Category): ResponseEntity<Category> {
+        val updatedCategory = categoryService.updateCategory(id, category)
+        return ResponseEntity.ok(updatedCategory!!)
+    }
+
     @GetMapping
     fun getAllCategories(): ResponseEntity<List<Category>> {
         val categories = categoryService.getCategories()
@@ -21,18 +33,6 @@ class CategoryController(private val categoryService: CategoryService) {
     fun getCategoryById(@PathVariable id: Int): ResponseEntity<Category> {
         val category = categoryService.getCategoryById(id)
         return ResponseEntity.ok(category)
-    }
-
-    @PostMapping
-    fun createCategory(@RequestBody category: Category): ResponseEntity<Category> {
-        val createCategory = categoryService.createCategory(category)
-        return ResponseEntity.status(HttpStatus.CREATED).body(createCategory)
-    }
-
-    @PostMapping("/{id}")
-    fun updateCategory(@PathVariable id: Int, @RequestBody category: Category): ResponseEntity<Category> {
-        val updatedCategory = categoryService.updateCategory(id, category)
-        return ResponseEntity.ok(updatedCategory!!)
     }
 
     @DeleteMapping("/{id}")
