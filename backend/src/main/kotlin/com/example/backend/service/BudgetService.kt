@@ -1,8 +1,16 @@
 package com.example.backend.service
 
+import com.example.backend.model.Budget
 import org.springframework.stereotype.Service
+import java.time.Month
+import java.time.Year
 
 @Service
 interface BudgetService {
-    //TODO("Define budget-related methods here")
+    fun createBudget(budget: Budget, userId: Int) : Budget
+    fun deleteBudget(id : Int)
+    fun updateBudget(id: Int, updateBudget: Budget) : Budget?
+    fun checkBudgetLimit(userId: Int, month: Int, year: Int) : Boolean
+    fun getBudgetsByUser(userId: Int) : List<Budget>
+
 }
