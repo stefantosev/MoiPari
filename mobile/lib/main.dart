@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/tracker_home.dart';
 
+import 'home.dart';
+
 void main() {
-  runApp(FinanceTrackerApp());
+  runApp(MyApp());
 }
 
-class FinanceTrackerApp extends StatelessWidget {
-  const FinanceTrackerApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +19,9 @@ class FinanceTrackerApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: FinanceTrackerHome(),
+      home: HomePage(),
     );
   }
 }
+
+
