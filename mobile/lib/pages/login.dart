@@ -27,17 +27,13 @@ class _LoginPageState extends State<LoginPage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFFFFDEE9),
-              Color(0xFFFCC2FF),
-            ],
+            colors: [Color(0xFFFFDEE9), Color(0xFFFCC2FF)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: Stack(
           children: [
-
             Center(
               child: SingleChildScrollView(
                 child: Padding(
@@ -46,16 +42,12 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Image.asset(
-                        'assets/images/MoiPari.png',
-                        height: 120,
-                      ),
-                      const SizedBox(height: 30),
-
-
+                      Image.asset('assets/images/MoiPari.png'),
+                      SizedBox(height: 20),
                       TextField(
                         controller: _usernameController,
                         decoration: InputDecoration(
+                          fillColor: Colors.white,
                           filled: true,
                           labelText: 'Username',
                           border: OutlineInputBorder(
@@ -69,6 +61,7 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _passwordController,
                         obscureText: true,
                         decoration: InputDecoration(
+                          fillColor: Colors.white,
                           filled: true,
                           labelText: 'Password',
                           border: OutlineInputBorder(
