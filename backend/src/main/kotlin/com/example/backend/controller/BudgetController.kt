@@ -42,4 +42,34 @@ class BudgetController(private val budgetService: BudgetService) {
         val isLimitExceeded = budgetService.checkBudgetLimit(userId, month, year)
         return ResponseEntity.ok(isLimitExceeded)
     }
+
+    @GetMapping("/convert-currency")
+    fun convertCurrency(
+        @RequestParam amount: Float,
+        @RequestParam fromCurrency: String,
+        @RequestParam toCurrency: String
+    ): ResponseEntity<Float> {
+        val convertedAmount = budgetService.convertCurrency(amount, fromCurrency, toCurrency)
+        return ResponseEntity.ok(convertedAmount)
+    }
+
+    @GetMapping("/total-budget")
+    fun getTotalBudget(
+        @RequestParam userId: Int,
+        @RequestParam month: Int,
+        @RequestParam year: Int
+    ): ResponseEntity<Float> {
+        val totalBudget = budgetService.getTotalBudget(userId, month, year)
+        return ResponseEntity.ok(totalBudget)
+    }
+
+    @GetMapping("/remaining-budget")
+    fun getRemainingBudget(
+        @RequestParam userId: Int,
+        @RequestParam month: Int,
+        @RequestParam year: Int
+    ): ResponseEntity<Float> {
+        val remainingBudget = budgetService.getRemainingBudget(userId, month, year)
+        return ResponseEntity.ok(remainingBudget)
+    }
 }
