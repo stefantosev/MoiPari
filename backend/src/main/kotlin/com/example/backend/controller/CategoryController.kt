@@ -1,7 +1,9 @@
 package com.example.backend.controller
 
 import com.example.backend.model.Category
+import com.example.backend.model.User
 import com.example.backend.service.CategoryService
+import com.example.backend.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
@@ -9,11 +11,12 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/categories")
-class CategoryController(private val categoryService: CategoryService) {
+class CategoryController(private val categoryService: CategoryService, private val userService: UserService) {
 
     @PostMapping
-    fun createCategory(@RequestBody category: Category): ResponseEntity<Category> {
-        val createCategory = categoryService.createCategory(category)
+    fun createCategory(@RequestBody category: Category, @RequestBody id: Int): ResponseEntity<Category> {
+        val user = userService.getUserById(id)
+        val createCategory = categoryService.createCategory(category, user)
         return ResponseEntity.status(HttpStatus.CREATED).body(createCategory)
     }
 

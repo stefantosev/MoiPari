@@ -1,16 +1,12 @@
 package com.example.backend.model
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo
-import com.fasterxml.jackson.annotation.JsonManagedReference
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import jakarta.persistence.*
-import lombok.NoArgsConstructor
 import java.time.LocalDateTime
-
 
 @Entity
 @Table(name = "users")
-@NoArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
 data class User(
 
@@ -24,7 +20,6 @@ data class User(
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
-    @JsonManagedReference
     val categories: MutableList<Category> = mutableListOf(),
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
@@ -32,5 +27,4 @@ data class User(
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     val budget: MutableList<Budget> = mutableListOf()
-
 )
