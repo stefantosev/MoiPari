@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 
 @Service
 interface CategoryService {
-    fun createCategory(category: Category) : Category
+    fun createCategory(category: Category, user: User) : Category
     fun deleteCategory(id : Int)
     fun updateCategory(id: Int, updateCategory: Category) : Category?
     fun getCategories() : List<Category>

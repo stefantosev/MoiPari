@@ -9,12 +9,13 @@ import org.springframework.stereotype.Service
 @Service
 class CategoryServiceImpl(private val categoryRepository: CategoryRepository) : CategoryService {
 
-    override fun createCategory(category: Category,): Category {
+    override fun createCategory(category: Category, user: User): Category {
         return categoryRepository.save(
             Category(
                 name = category.name,
                 icon = category.icon,
                 color = category.color,
+                user = category.user,
             )
         )
     }
