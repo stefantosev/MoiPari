@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile/pages/login.dart';
 import 'package:mobile/pages/register.dart';
 
+import 'models/categories.dart';
+
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -82,6 +84,36 @@ class HomePage extends StatelessWidget {
                       'Register',
                       style: TextStyle(
                         color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CategoryListScreen(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'View Categories', // Button text
+                      style: TextStyle(
+                        color: Colors.black, // Text color
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
