@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/pages/login.dart';
-import 'package:mobile/pages/register.dart';
+import 'package:mobile/widgets/nav_bar.dart';
 
-import 'models/categories.dart';
+import '../models/categories.dart';
+import 'login.dart';
+import 'register.dart';
 
-
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 0;
+  List<Widget> _pages = [];
 
   @override
   Widget build(BuildContext context) {
@@ -16,10 +24,7 @@ class HomePage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFFC1CC),
-              Color(0xFFFFA6C9),
-            ],
+            colors: [Color(0xFFFFC1CC), Color(0xFFFFA6C9)],
           ),
         ),
         child: Center(
@@ -28,10 +33,7 @@ class HomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/MoiPari.png',
-                  height: 180,
-                ),
+                Image.asset('assets/images/MoiPari.png', height: 180),
 
                 const SizedBox(height: 100),
 
@@ -89,7 +91,6 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -126,5 +127,6 @@ class HomePage extends StatelessWidget {
         ),
       ),
     );
+    ;
   }
 }
