@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/widgets/card.dart';
 import 'package:mobile/widgets/nav_bar.dart';
 
 import '../models/categories.dart';
@@ -13,8 +14,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
-  List<Widget> _pages = [];
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +36,7 @@ class _HomePageState extends State<HomePage> {
 
                 const SizedBox(height: 100),
 
+                CreditCardWidget(),
                 SizedBox(
                   width: double.infinity,
                   height: 50,
