@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/pages/categories.dart';
 
+// TODO: RIVERPOD AND CONSUMER WIDGET ??
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -86,7 +88,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         width: double.infinity,
                         height: 49,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => CategoryPage(),
+                                ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFF3B62ff),
                             shape: RoundedRectangleBorder(

@@ -24,6 +24,7 @@ class NavBar extends ConsumerWidget {
           ),
           NavigationDestination(icon: Icon(Icons.wallet), label: "Budget"),
           NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
+          NavigationDestination(icon: Icon(Icons.accessible), label: "Welcome"),
         ],
       ),
     );

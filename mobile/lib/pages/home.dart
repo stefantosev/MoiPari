@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/widgets/card.dart';
 import 'package:mobile/widgets/nav_bar.dart';
 
-import '../models/categories.dart';
+import 'categories.dart';
 import 'login.dart';
 import 'register.dart';
 
@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
 
                 const SizedBox(height: 100),
 
-                CreditCardWidget(),
+
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => CategoryListScreen(),
+                          builder: (context) => CategoryPage(),
                         ),
                       );
                     },

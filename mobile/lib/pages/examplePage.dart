@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class FinanceTrackerHome extends StatefulWidget {
+class ExamplePage extends StatefulWidget {
   @override
-  _FinanceTrackerHomeState createState() => _FinanceTrackerHomeState();
+  _ExamplePageState createState() => _ExamplePageState();
 }
 
-class _FinanceTrackerHomeState extends State<FinanceTrackerHome> {
+class _ExamplePageState extends State<ExamplePage> {
   final List<Transaction> _transactions = [
     Transaction('Groceries', -50.00, DateTime.now().subtract(Duration(days: 1)), 'Food'),
     Transaction('Salary', 2000.00, DateTime.now().subtract(Duration(days: 2)), 'Income'),
