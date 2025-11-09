@@ -1,6 +1,8 @@
 package com.example.backend.controller
 
 import com.example.backend.model.User
+import com.example.backend.model.dto.UserRequest
+import com.example.backend.model.dto.UserResponse
 import com.example.backend.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -19,23 +21,23 @@ import org.springframework.web.bind.annotation.RestController
 class UserController(private val userService: UserService) {
 
     @GetMapping
-    fun getAllUsers(): ResponseEntity<List<User>> {
+    fun getAllUsers(): ResponseEntity<List<UserResponse>> {
         return ResponseEntity.ok(userService.getUsers())
     }
 
     @GetMapping("/{id}")
-    fun getUserById(@PathVariable id: Int): ResponseEntity<User> {
+    fun getUserById(@PathVariable id: Int): ResponseEntity<UserResponse> {
         return ResponseEntity.ok(userService.getUserById(id))
     }
 
     @PostMapping
-    fun createUser(@RequestBody user: User): ResponseEntity<User> {
+    fun createUser(@RequestBody user: UserRequest): ResponseEntity<UserResponse> {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(userService.createUser(user))
     }
 
     @PutMapping("/{id}")
-    fun updateUser(@PathVariable id: Int, @RequestBody user: User): ResponseEntity<User> {
+    fun updateUser(@PathVariable id: Int, @RequestBody user: UserRequest): ResponseEntity<UserResponse> {
         return ResponseEntity.ok(userService.updateUser(id, user))
     }
 

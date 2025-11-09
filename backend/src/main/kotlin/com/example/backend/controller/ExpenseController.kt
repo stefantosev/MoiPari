@@ -1,6 +1,7 @@
 package com.example.backend.controller
 
-import com.example.backend.model.Expense
+import com.example.backend.model.dto.ExpenseRequest
+import com.example.backend.model.dto.ExpenseResponse
 import com.example.backend.service.ExpenseService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -18,23 +19,23 @@ import org.springframework.web.bind.annotation.RestController
 class ExpenseController(private val expenseService: ExpenseService) {
 
     @GetMapping
-    fun getAllExpenses(): ResponseEntity<List<Expense>> {
+    fun getAllExpenses(): ResponseEntity<List<ExpenseResponse>> {
         return ResponseEntity.ok(expenseService.getExpenses())
     }
 
     @GetMapping("/{id}")
-    fun getExpenseById(@PathVariable id: Int): ResponseEntity<Expense> {
+    fun getExpenseById(@PathVariable id: Int): ResponseEntity<ExpenseResponse> {
         return ResponseEntity.ok(expenseService.getExpenseById(id))
     }
 
     @PostMapping
-    fun createExpense(@RequestBody expense: Expense): ResponseEntity<Expense> {
+    fun createExpense(@RequestBody expense: ExpenseRequest): ResponseEntity<ExpenseResponse> {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(expenseService.createExpense((expense)))
     }
 
     @PutMapping("/{id}")
-    fun updateExpense(@PathVariable id: Int, @RequestBody expense: Expense): ResponseEntity<Expense> {
+    fun updateExpense(@PathVariable id: Int, @RequestBody expense: ExpenseRequest): ResponseEntity<ExpenseResponse> {
         return ResponseEntity.ok(expenseService.updateExpense(id, expense))
     }
 

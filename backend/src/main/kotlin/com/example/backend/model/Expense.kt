@@ -10,7 +10,6 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "expenses")
-//@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
 data class Expense(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,11 +26,9 @@ data class Expense(
         inverseJoinColumns = [JoinColumn(name = "category_id")]
     )
 
-    @JsonManagedReference("expense-categories")
     val categories: MutableList<Category> = mutableListOf(),
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    @JsonBackReference("user-expenses")
     var user: User? = null,
 )

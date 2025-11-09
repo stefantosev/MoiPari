@@ -1,13 +1,13 @@
 package com.example.backend.service.impl
 
 import com.example.backend.model.Budget
+import com.example.backend.model.dto.BudgetRequest
+import com.example.backend.model.dto.BudgetResponse
 import com.example.backend.repository.BudgetRepository
 import com.example.backend.repository.ExpenseRepository
 import com.example.backend.repository.UserRepository
 import com.example.backend.service.BudgetService
 import org.springframework.stereotype.Service
-import java.time.Month
-import java.time.Year
 
 @Service
 class BudgetServiceImpl(
@@ -23,47 +23,56 @@ class BudgetServiceImpl(
         "USD_TO_MKD" to 58.5,
     )
 
-    override fun createBudget(budget: Budget, userId: Int): Budget {
-        val user = userRepository.findById(userId)
+    override fun createBudget(request: BudgetRequest): BudgetResponse {
+        val user = userRepository.findById(request.userId)
             .orElseThrow { Exception("User not found") }
 
         val newBudget = Budget(
-            monthlyLimit = budget.monthlyLimit,
-            year = budget.year,
-            month = budget.month,
+            monthlyLimit = request.monthlyLimit,
+            year = request.year,
+            month = request.month,
             user = user
         )
-        return budgetRepository.save(newBudget)
+        val savedBudget = budgetRepository.save(newBudget)
+        return BudgetResponse.fromEntity(savedBudget)
     }
 
     override fun deleteBudget(id: Int) {
         budgetRepository.deleteById(id)
     }
 
-    override fun updateBudget(id: Int, updateBudget: Budget): Budget? {
-        budgetRepository.findById(id)
-            .orElseThrow { Exception("Budget not found") }.let { existingBudget ->
+    override fun updateBudget(id: Int, request: BudgetRequest): BudgetResponse {
+        val existingBudget = budgetRepository.findById(id)
+            .orElseThrow {
+                Exception("Budget not found")
+            }
 
-            val updatedBudget = existingBudget.copy(
-                monthlyLimit = updateBudget.monthlyLimit,
-                year = updateBudget.year,
-                month = updateBudget.month,
-            )
-            return budgetRepository.save(updatedBudget)
-        }
+        val user = userRepository.findById(request.userId)
+            .orElseThrow {
+                Exception("User not found")
+            }
+
+        val updatedBudget = existingBudget.copy(
+            monthlyLimit = request.monthlyLimit,
+            year = request.year,
+            month = request.month,
+            user = user
+        )
+        val savedBudget = budgetRepository.save(updatedBudget)
+        return BudgetResponse.fromEntity(savedBudget)
+
     }
 
     override fun checkBudgetLimit(userId: Int, month: Int, year: Int): Boolean {
-        val budgets = budgetRepository.findAll().filter {
-            it.user?.id == userId && it.month == month && it.year == year
-        }
+        val budgets = budgetRepository.findByUserIdAndMonthAndYear(userId, month, year)
+
         return budgets.sumOf { it.monthlyLimit.toDouble() } > 0
     }
 
 
-    override fun getBudgetsByUser(userId: Int): List<Budget> {
-        return budgetRepository.findAll().filter {
-            it.user?.id == userId
+    override fun getBudgetsByUser(userId: Int): List<BudgetResponse> {
+        return budgetRepository.findByUserId(userId).map{
+            BudgetResponse.fromEntity(it)
         }
     }
 
@@ -74,24 +83,18 @@ class BudgetServiceImpl(
     }
 
     override fun getTotalBudget(userId: Int, month: Int, year: Int): Float {
-        return budgetRepository.findAll()
-            .filter { it.user?.id == userId && it.month == month && it.year == year }
+        return budgetRepository.findByUserIdAndMonthAndYear(userId, month, year)
             .sumOf { it.monthlyLimit.toDouble() }
             .toFloat()
     }
 
-    override fun getRemainingBudget(userId: Int, month: Int, year: Int): Float {
-        val totalBudget = getTotalBudget(userId, month, year)
-        val totalExpenses = expenseRepository.findAll()
-            .filter {
-                it.user?.id == userId &&
-                it.date.monthValue == month &&
-                it.date.year == year
-            }
-            .sumOf { it.amount.toDouble() }
-            .toFloat()
-
-        return totalBudget - totalExpenses
-    }
+//    override fun getRemainingBudget(userId: Int, month: Int, year: Int): Float {
+//        val totalBudget = getTotalBudget(userId, month, year)
+//        val totalExpenses = budg.findByUserIdAndMonthAndYear(userId, month, year)
+//            .sumOf { it.amount.toDouble() }
+//            .toFloat()
+//
+//        return totalBudget - totalExpenses
+//    }
 
 }

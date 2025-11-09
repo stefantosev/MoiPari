@@ -6,7 +6,6 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "budget")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
 data class Budget(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

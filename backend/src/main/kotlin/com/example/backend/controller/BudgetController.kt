@@ -1,6 +1,7 @@
 package com.example.backend.controller
 
-import com.example.backend.model.Budget
+import com.example.backend.model.dto.BudgetRequest
+import com.example.backend.model.dto.BudgetResponse
 import com.example.backend.service.BudgetService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -11,14 +12,14 @@ import org.springframework.web.bind.annotation.*
 class BudgetController(private val budgetService: BudgetService) {
 
     @PostMapping
-    fun createBudget(@RequestBody budget: Budget, @RequestParam userId: Int): ResponseEntity<Budget> {
-        val createdBudget = budgetService.createBudget(budget, userId)
+    fun createBudget(@RequestBody request: BudgetRequest): ResponseEntity<BudgetResponse> {
+        val createdBudget = budgetService.createBudget(request)
         return ResponseEntity.ok(createdBudget)
     }
 
     @PutMapping("/update/{id}")
-    fun updateBudget(@PathVariable id: Int, @RequestBody budget: Budget): ResponseEntity<Budget>? {
-        return ResponseEntity.ok(budgetService.updateBudget(id, budget))
+    fun updateBudget(@PathVariable id: Int, @RequestBody request: BudgetRequest): ResponseEntity<BudgetResponse> {
+        return ResponseEntity.ok(budgetService.updateBudget(id, request))
     }
 
     @DeleteMapping("/{id}")
@@ -28,7 +29,7 @@ class BudgetController(private val budgetService: BudgetService) {
     }
 
     @GetMapping("/user/{userId}")
-    fun getBudgetsByUser(@PathVariable userId: Int): ResponseEntity<List<Budget>> {
+    fun getBudgetsByUser(@PathVariable userId: Int): ResponseEntity<List<BudgetResponse>> {
         val budgets = budgetService.getBudgetsByUser(userId)
         return ResponseEntity.ok(budgets)
     }
@@ -63,13 +64,13 @@ class BudgetController(private val budgetService: BudgetService) {
         return ResponseEntity.ok(totalBudget)
     }
 
-    @GetMapping("/remaining-budget")
-    fun getRemainingBudget(
-        @RequestParam userId: Int,
-        @RequestParam month: Int,
-        @RequestParam year: Int
-    ): ResponseEntity<Float> {
-        val remainingBudget = budgetService.getRemainingBudget(userId, month, year)
-        return ResponseEntity.ok(remainingBudget)
-    }
+//    @GetMapping("/remaining-budget")
+//    fun getRemainingBudget(
+//        @RequestParam userId: Int,
+//        @RequestParam month: Int,
+//        @RequestParam year: Int
+//    ): ResponseEntity<Float> {
+//        val remainingBudget = budgetService.getRemainingBudget(userId, month, year)
+//        return ResponseEntity.ok(remainingBudget)
+//    }
 }

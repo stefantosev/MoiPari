@@ -40,10 +40,13 @@ class DataInitializer(
         val managedUser1 = entityManager.merge(user1)
         val managedUser2 = entityManager.merge(user2)
 
-        val foodCategory = Category(name = "Food", color = "Red", icon = "🍔", user = managedUser1)
+        val foodCategory = Category(name = "Food", color = "Red", icon = "ikona", user = managedUser1)
         val transportCategory = Category(name = "Transport", color = "Blue", icon = "🚗", user = managedUser1)
         val entertainmentCategory = Category(name = "Entertainment", color = "Green", icon = "🎬", user = managedUser2)
-        categoryRepository.saveAll(listOf(foodCategory, transportCategory, entertainmentCategory))
+        val dd = Category(name = "A", color = "Green", icon = "🎬", user = managedUser2)
+        val ddd = Category(name = "B", color = "B", icon = "F", user = managedUser2)
+        val dddd = Category(name = "C", color = "Z", icon = "D", user = managedUser2)
+        categoryRepository.saveAll(listOf(foodCategory, transportCategory, entertainmentCategory, dd, ddd, dddd,))
 
 
         val expense1 = Expense(
