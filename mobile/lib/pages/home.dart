@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/widgets/card.dart';
-import 'package:mobile/widgets/nav_bar.dart';
 
 import 'categories.dart';
 import 'login.dart';
@@ -127,6 +125,6 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-    ;
+
   }
 }

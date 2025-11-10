@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/pages/categories.dart';
+import 'package:mobile/pages/expense_page.dart';
 import 'package:mobile/pages/home.dart';
 import 'package:mobile/pages/login.dart';
 import 'package:mobile/pages/register.dart';
@@ -35,6 +36,8 @@ class MainWrapper extends ConsumerWidget {
         return ExamplePage();
       case 4:
         return WelcomePage();
+      case 5:
+        return ExpensePage();
       default:
         return HomePage();
     }
