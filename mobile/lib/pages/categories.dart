@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/category.dart';
 
-import '../service/CategoryService.dart';
+import '../service/category_service.dart';
 import '../widgets/card.dart';
 
 class CategoryPage extends StatefulWidget {
