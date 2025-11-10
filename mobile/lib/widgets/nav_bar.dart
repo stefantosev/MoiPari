@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../navigation_provider.dart';
+import '../providers/navigation_provider.dart';
 
 class NavBar extends ConsumerWidget {
   const NavBar({super.key});
@@ -18,14 +18,10 @@ class NavBar extends ConsumerWidget {
         },
         destinations: [
           NavigationDestination(icon: Icon(Icons.home), label: "Home"),
-          NavigationDestination(
-            icon: Icon(Icons.analytics),
-            label: "Analytics",
-          ),
           NavigationDestination(icon: Icon(Icons.wallet), label: "Budget"),
-          NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
-          NavigationDestination(icon: Icon(Icons.accessible), label: "Welcome"),
+          NavigationDestination(icon: Icon(Icons.analytics), label: "Analytics"),
           NavigationDestination(icon: Icon(Icons.money), label: "Expenses"),
+          NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );
