@@ -15,7 +15,8 @@ data class CategoryResponse(
     val name: String,
     val icon: String,
     val color: String,
-    val userId: Int
+    val userId: Int,
+    val expenseIds: List<Int>
 ){
     companion object {
         fun fromEntity(category: Category) : CategoryResponse{
@@ -24,7 +25,8 @@ data class CategoryResponse(
                 name = category.name,
                 icon = category.icon,
                 color = category.icon,
-                userId = category.user?.id?:0
+                userId = category.user?.id?:0,
+                expenseIds =  category.expenses.map { it.id }
             )
         }
     }

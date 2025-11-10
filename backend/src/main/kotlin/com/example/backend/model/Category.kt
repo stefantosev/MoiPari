@@ -7,7 +7,6 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "categories")
-//@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
 data class Category(
 
     @Id
@@ -19,10 +18,8 @@ data class Category(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    @JsonBackReference("user-categories")
     var user: User? = null,
 
     @ManyToMany(mappedBy = "categories")
-    @JsonBackReference("expense-categories")
     val expenses: MutableList<Expense> = mutableListOf()
 )
