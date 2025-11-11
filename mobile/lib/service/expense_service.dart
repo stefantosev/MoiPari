@@ -30,4 +30,28 @@ class ExpenseService {
 
     }
   }
+
+  Future<List<Expense>> getExpensesByCategoryId(String categoryId) async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/category/$categoryId"));
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+
+        List<Expense> expenses = jsonList
+            .map((jsonItem) => Expense.fromJson(jsonItem))
+            .toList();
+
+        return expenses;
+      } else {
+        throw Exception(
+          "Failed to load expenses by Category Id (Status code: ${response.statusCode}",
+        );
+      }
+    } catch (e) {
+      debugPrint("Error fetching expenses by Category Id: $e");
+      throw Exception("Failed to load expenses by Category Id: $e");
+
+    }
+  }
 }

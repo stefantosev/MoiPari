@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/models/category.dart';
+import 'package:mobile/pages/expenses.dart';
+import 'package:mobile/providers/navigation_provider.dart';
+import 'package:mobile/service/expense_service.dart';
 
 import '../service/category_service.dart';
 import '../widgets/card.dart';
 
-class CategoryPage extends StatefulWidget {
+class CategoryPage extends ConsumerStatefulWidget {
   const CategoryPage({super.key});
 
   @override
-  _CategoryPageState createState() => _CategoryPageState();
+  ConsumerState<CategoryPage> createState() => _CategoryPageState();
 }
 
-class _CategoryPageState extends State<CategoryPage> {
-  final Services _services = Services();
+class _CategoryPageState extends ConsumerState<CategoryPage> {
+  final CategoryService _services = CategoryService();
   late Future<List<Category>> _categoriesFuture;
 
   @override
@@ -23,6 +27,8 @@ class _CategoryPageState extends State<CategoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final navNotifier = ref.read(navigationIndexProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Categories'),
@@ -60,9 +66,14 @@ class _CategoryPageState extends State<CategoryPage> {
                       final categories = snapshot.data!;
                       return ListView.builder(
                         itemCount: categories.length,
-                        itemBuilder: (context, index) {
+                        itemBuilder: (context, index){
+                          final category_id = categories[index];
                           return ListTile(
                             title: Text(categories[index].name),
+                            onTap: () {
+                              ref.read(selectedCategoryIdProvider.notifier).state = category_id.id.toString();
+                              navNotifier.state = 3;
+                            }
                           );
                         },
                       );

@@ -42,7 +42,7 @@ class MainWrapper extends ConsumerWidget {
       case 2:
         return ExamplePage();
       case 3:
-        return ExpensePage();
+        return ExpensePage(categoryId: "0");
       case 4:
         return Placeholder();
       default:

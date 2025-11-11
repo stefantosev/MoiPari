@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile/models/category.dart';
 
-class Services {
+class CategoryService {
   String baseUrl = "http://localhost:8080/api/categories";
 
   Future<List<Category>> getCategories() async {

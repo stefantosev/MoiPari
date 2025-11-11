@@ -1,250 +1,222 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/models/expense.dart';
+import 'package:mobile/providers/navigation_provider.dart';
 import 'package:mobile/service/expense_service.dart';
 
-class ExpensePage extends StatefulWidget {
-  const ExpensePage({super.key});
+class ExpensePage extends ConsumerWidget {
+  const ExpensePage({super.key, required this.categoryId});
+  final String? categoryId;
+
+
 
   @override
-  _ExpensePageState createState() => _ExpensePageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final service = ExpenseService();
+    final selectedCategoryId = ref.watch(selectedCategoryIdProvider);
 
-class _ExpensePageState extends State<ExpensePage> {
-  final ExpenseService service = ExpenseService();
-  late Future<List<Expense>> _expenseFuture;
+    final expenseFuture = service.getExpensesByCategoryId(
+      selectedCategoryId ?? categoryId!,
+    );
 
-  @override
-  void initState() {
-    super.initState();
-    _expenseFuture = service.getExpenses();
-  }
-
-  void _refreshExpenses() {
-    setState(() {
-      _expenseFuture = service.getExpenses();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Expenses'),
-        backgroundColor: Colors.blue,
+        title: const Text('Expenses'),
+        backgroundColor: Colors.deepPurpleAccent,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _refreshExpenses,
-            tooltip: 'Refresh Expenses',
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.refresh),
+          //   onPressed: _refreshExpenses,
+          //   tooltip: 'Refresh Expenses',
+          // ),
         ],
       ),
       body: FutureBuilder<List<Expense>>(
-        future: _expenseFuture,
-        builder: (context, snapshot) {
+        future: expenseFuture,
+        builder:  (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text(
-                    'Loading expenses...',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.red,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Failed to load expenses',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      'Error: ${snapshot.error}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _refreshExpenses,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text('Retry'),
-                  ),
-                ],
-              ),
-            );
+            return Center(child: Text('Error: ${snapshot.error}'));
           } else if (snapshot.hasData) {
-            List<Expense> expenses = snapshot.data!;
-
+            final expenses = snapshot.data!;
             if (expenses.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.receipt_long,
-                      size: 64,
-                      color: Colors.grey,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'No expenses found',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Add your first expense to get started',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              );
+              return const Center(child: Text('No expenses found for this category.'));
             }
-
             return ListView.builder(
               itemCount: expenses.length,
               itemBuilder: (context, index) {
-                Expense expense = expenses[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  elevation: 2,
-                  child: ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.attach_money,
-                        color: Colors.blue,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(
-                      '\$${expense.amount.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (expense.description.isNotEmpty)
-                          Text(
-                            expense.description,
-                            style: TextStyle(fontSize: 14),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        if (expense.date != null)
-                          Text(
-                            'Date: ${_formatDate(expense.date!)}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                        if (expense.paymentMethod != null && expense.paymentMethod!.isNotEmpty)
-                          Text(
-                            'Payment: ${expense.paymentMethod!}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                        if (expense.categoryIds.isNotEmpty)
-                          Text(
-                            'Categories: ${expense.categoryIds.length}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                      ],
-                    ),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: Colors.grey,
-                    ),
-                    onTap: () {
-                      // Add onTap functionality here
-                      _showExpenseDetails(expense);
-                    },
-                  ),
+                final expense = expenses[index];
+                return ListTile(
+                  title: Text(expense.description),
+                  subtitle: Text('${expense.amount} \$'),
                 );
               },
             );
           } else {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.receipt_long,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No expenses data',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return const Center(child: Text('No data.'));
           }
         },
+
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _addNewExpense();
-        },
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        tooltip: 'Add New Expense',
-        child: Icon(Icons.add),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed:() => ,
+      //   backgroundColor: Colors.blue,
+      //   foregroundColor: Colors.white,
+      //   tooltip: 'Add New Expense',
+      //   child: const Icon(Icons.add),
+      // ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text(
+            'Loading expenses...',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ],
       ),
     );
   }
+
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const SizedBox(height: 16),
+          const Text(
+            'Failed to load expenses',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              'Error: $error',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // ElevatedButton(
+          //   onPressed: _refreshExpenses,
+          //   style: ElevatedButton.styleFrom(
+          //     backgroundColor: Colors.deepPurpleAccent,
+          //     foregroundColor: Colors.white,
+          //   ),
+          //   child: const Text('Retry'),
+          // ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildEmptyState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.receipt_long, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'No expenses found',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Add your first expense to get started',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildExpenseList(List<Expense> expenses) {
+    return ListView.builder(
+      itemCount: expenses.length,
+      itemBuilder: (context, index) {
+        final expense = expenses[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          elevation: 2,
+          child: ListTile(
+            leading: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.attach_money, color: Colors.blue, size: 20),
+            ),
+            title: Text(
+              '\$${expense.amount.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (expense.description.isNotEmpty)
+                  Text(
+                    expense.description,
+                    style: const TextStyle(fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                if (expense.date != null)
+                  Text(
+                    'Date: ${_formatDate(expense.date!)}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                if (expense.paymentMethod != null && expense.paymentMethod!.isNotEmpty)
+                  Text(
+                    'Payment: ${expense.paymentMethod!}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                if (expense.categoryIds.isNotEmpty)
+                  Text(
+                    'Categories: ${expense.categoryIds.length}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+              ],
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            onTap: () => _showExpenseDetails(context, expense),
+          ),
+        );
+      },
+    );
+  }
+
 
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  void _showExpenseDetails(Expense expense) {
+
+  void _showExpenseDetails(BuildContext context, Expense expense) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Expense Details'),
+          title: const Text('Expense Details'),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
@@ -261,10 +233,8 @@ class _ExpensePageState extends State<ExpensePage> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              child: const Text('Close'),
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ],
         );
@@ -274,28 +244,23 @@ class _ExpensePageState extends State<ExpensePage> {
 
   Widget _buildDetailItem(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$label: ',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Expanded(
-            child: Text(value),
-          ),
+          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Expanded(child: Text(value)),
         ],
       ),
     );
   }
 
-  void _addNewExpense() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Add new expense functionality to be implemented'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
+  // void _addNewExpense() {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     const SnackBar(
+  //       content: Text('Add new expense functionality to be implemented'),
+  //       duration: Duration(seconds: 2),
+  //     ),
+  //   );
+  // }
 }
