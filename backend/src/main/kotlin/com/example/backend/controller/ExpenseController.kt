@@ -45,4 +45,10 @@ class ExpenseController(private val expenseService: ExpenseService) {
         expenseService.deleteExpense(id)
         return ResponseEntity.noContent().build()
     }
+
+    @GetMapping("/category/{categoryId}")
+    fun getExpensesByCategoryId(@PathVariable categoryId: Int): ResponseEntity<List<ExpenseResponse>> {
+        val expenses = expenseService.getExpensesByCategoryId(categoryId)
+        return ResponseEntity.ok(expenses)
+    }
 }

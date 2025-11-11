@@ -76,4 +76,8 @@ class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository, priva
         return expenseRepository.findAll().map {ExpenseResponse.fromEntity(it)}
     }
 
+    override fun getExpensesByCategoryId(categoryId: Int): List<ExpenseResponse> {
+        return expenseRepository.findAllByCategoriesId(categoryId).map {ExpenseResponse.fromEntity(it)}
+    }
+
 }
