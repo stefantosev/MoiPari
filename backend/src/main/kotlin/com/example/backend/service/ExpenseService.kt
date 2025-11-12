@@ -14,4 +14,5 @@ interface ExpenseService {
     fun getExpenseById(id: Int): ExpenseResponse
     fun getExpenses(): List<ExpenseResponse>
     fun getExpensesByCategoryId(categoryId: Int): List<ExpenseResponse>
+    fun getExpensesByUserId(userId: Int) : List<ExpenseResponse>
 }

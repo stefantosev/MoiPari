@@ -43,10 +43,11 @@ class DataInitializer(
         val foodCategory = Category(name = "Food", color = "Red", icon = "ikona", user = managedUser1)
         val transportCategory = Category(name = "Transport", color = "Blue", icon = "🚗", user = managedUser1)
         val entertainmentCategory = Category(name = "Entertainment", color = "Green", icon = "🎬", user = managedUser2)
-        val dd = Category(name = "A", color = "Green", icon = "🎬", user = managedUser2)
-        val ddd = Category(name = "B", color = "B", icon = "F", user = managedUser2)
-        val dddd = Category(name = "C", color = "Z", icon = "D", user = managedUser2)
-        categoryRepository.saveAll(listOf(foodCategory, transportCategory, entertainmentCategory, dd, ddd, dddd,))
+        val dd = Category(name = "Housing", color = "Green", icon = "🎬", user = managedUser2)
+        val ddd = Category(name = "Healthcare", color = "B", icon = "F", user = managedUser2)
+        val dddd = Category(name = "Personal Care", color = "Z", icon = "D", user = managedUser2)
+        val ddddd = Category(name = "Education", color = "Orange", icon = "D", user = managedUser1)
+        categoryRepository.saveAll(listOf(foodCategory, transportCategory, entertainmentCategory, dd, ddd, dddd,ddddd))
 
 
         val expense1 = Expense(
@@ -72,11 +73,38 @@ class DataInitializer(
             description = "Movie ticket",
             date = LocalDateTime.now(),
             paymentMethod = PAYMENT.CASH,
-            user = managedUser2,
+            user = managedUser1,
             categories = mutableListOf(entertainmentCategory)
         )
 
-        expenseRepository.saveAll(listOf(expense1, expense2, expense3))
+        val expense4 = Expense(
+            amount = 20.5F,
+            description = "League of legends RP",
+            date = LocalDateTime.now(),
+            paymentMethod = PAYMENT.CARD,
+            user = managedUser1,
+            categories = mutableListOf(entertainmentCategory)
+        )
+
+        val expense5 = Expense(
+            amount = 2.5F,
+            description = "Cold Water",
+            date = LocalDateTime.now(),
+            paymentMethod = PAYMENT.CASH,
+            user = managedUser1,
+            categories = mutableListOf(foodCategory)
+        )
+
+        val expense6 = Expense(
+            amount = 9.3F,
+            description = "Beans",
+            date = LocalDateTime.now(),
+            paymentMethod = PAYMENT.CASH,
+            user = managedUser1,
+            categories = mutableListOf(foodCategory)
+        )
+
+        expenseRepository.saveAll(listOf(expense1, expense2, expense3,expense4, expense5, expense6))
 
 
         val budget1 = Budget(monthlyLimit = 500F, year = 2024, month = 6, user = managedUser1)

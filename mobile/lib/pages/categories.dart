@@ -67,11 +67,11 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
                       return ListView.builder(
                         itemCount: categories.length,
                         itemBuilder: (context, index){
-                          final category_id = categories[index];
+                          final categoryId = categories[index];
                           return ListTile(
                             title: Text(categories[index].name),
                             onTap: () {
-                              ref.read(selectedCategoryIdProvider.notifier).state = category_id.id.toString();
+                              ref.read(selectedCategoryIdProvider.notifier).state = categoryId.id.toString();
                               navNotifier.state = 3;
                             }
                           );

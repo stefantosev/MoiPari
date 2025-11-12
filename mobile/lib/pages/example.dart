@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/models/expense.dart';
+import 'package:mobile/service/expense_service.dart';
 
 class ExamplePage extends StatefulWidget {
   @override
@@ -7,28 +9,37 @@ class ExamplePage extends StatefulWidget {
 }
 
 class _ExamplePageState extends State<ExamplePage> {
-  final List<Transaction> _transactions = [
-    Transaction('Groceries', -50.00, DateTime.now().subtract(Duration(days: 1)), 'Food'),
-    Transaction('Salary', 2000.00, DateTime.now().subtract(Duration(days: 2)), 'Income'),
-    Transaction('Electricity Bill', -80.00, DateTime.now().subtract(Duration(days: 3)), 'Utilities'),
-    Transaction('Freelance Work', 300.00, DateTime.now().subtract(Duration(days: 4)), 'Income'),
-    Transaction('Grabez', 130.00, DateTime.now().subtract(Duration(days: 4)), 'Income'),
-  ];
+  final ExpenseService _expenseService = ExpenseService();
+  late Future<List<Expense>> _expensesFuture;
 
-  double get _totalBalance {
-    return _transactions.fold(0.0, (sum, transaction) => sum + transaction.amount);
+  final String currentUserId = "1";
+
+  @override
+  void initState() {
+    super.initState();
+    _expensesFuture = _expenseService.getExpensesByUserId(currentUserId);
   }
 
-  double get _totalIncome {
-    return _transactions
-        .where((transaction) => transaction.amount > 0)
-        .fold(0.0, (sum, transaction) => sum + transaction.amount);
+  void _refreshExpenses() {
+    setState(() {
+      _expensesFuture = _expenseService.getExpensesByUserId(currentUserId);
+    });
   }
 
-  double get _totalExpenses {
-    return _transactions
-        .where((transaction) => transaction.amount < 0)
-        .fold(0.0, (sum, transaction) => sum + transaction.amount);
+  double _calculateTotalBalance(List<Expense> expenses) {
+    return expenses.fold(0.0, (sum, expense) => sum + expense.amount);
+  }
+
+  double _calculateTotalIncome(List<Expense> expenses) {
+    return expenses
+        .where((expense) => expense.amount > 0)
+        .fold(0.0, (sum, expense) => sum + expense.amount);
+  }
+
+  double _calculateTotalExpenses(List<Expense> expenses) {
+    return expenses
+        .where((expense) => expense.amount < 0)
+        .fold(0.0, (sum, expense) => sum + expense.amount);
   }
 
   @override
@@ -38,40 +49,28 @@ class _ExamplePageState extends State<ExamplePage> {
         title: Text('Finance Tracker'),
         backgroundColor: Colors.blue[700],
         elevation: 0,
-      ),
-      body: Column(
-        children: [
-          _buildBalanceCard(),
-
-          _buildSummaryCards(),
-
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Recent Transactions',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'See All',
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: _buildTransactionsList(),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: _refreshExpenses,
+            tooltip: 'Refresh',
           ),
         ],
+      ),
+      body: FutureBuilder<List<Expense>>(
+        future: _expensesFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return _buildLoadingState();
+          } else if (snapshot.hasError) {
+            return _buildErrorState(snapshot.error.toString());
+          } else if (snapshot.hasData) {
+            final expenses = snapshot.data!;
+            return _buildContent(expenses);
+          } else {
+            return _buildEmptyState();
+          }
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addTransaction,
@@ -81,7 +80,45 @@ class _ExamplePageState extends State<ExamplePage> {
     );
   }
 
-  Widget _buildBalanceCard() {
+  Widget _buildContent(List<Expense> expenses) {
+    final totalBalance = _calculateTotalBalance(expenses);
+    final totalIncome = _calculateTotalIncome(expenses);
+    final totalExpenses = _calculateTotalExpenses(expenses);
+
+    return Column(
+      children: [
+        _buildBalanceCard(totalBalance, totalIncome, totalExpenses),
+        _buildSummaryCards(expenses),
+        Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Transactions',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'See All',
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: _buildTransactionsList(expenses),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBalanceCard(double totalBalance, double totalIncome, double totalExpenses) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.all(16.0),
@@ -113,7 +150,7 @@ class _ExamplePageState extends State<ExamplePage> {
           ),
           SizedBox(height: 8),
           Text(
-            '\$${_totalBalance.toStringAsFixed(2)}',
+            '\$${totalBalance.toStringAsFixed(2)}',
             style: TextStyle(
               color: Colors.white,
               fontSize: 32,
@@ -124,8 +161,8 @@ class _ExamplePageState extends State<ExamplePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildBalanceItem('Income', _totalIncome, Colors.green[300]!),
-              _buildBalanceItem('Expenses', _totalExpenses.abs(), Colors.red[300]!),
+              _buildBalanceItem('Income', totalIncome, Colors.green[300]!),
+              _buildBalanceItem('Expenses', totalExpenses.abs(), Colors.red[300]!),
             ],
           ),
         ],
@@ -157,19 +194,44 @@ class _ExamplePageState extends State<ExamplePage> {
     );
   }
 
-  Widget _buildSummaryCards() {
+  Widget _buildSummaryCards(List<Expense> expenses) {
+    final weeklyTotal = _calculateWeeklyTotal(expenses);
+    final monthlyTotal = _calculateMonthlyTotal(expenses);
+    final yearlyTotal = _calculateYearlyTotal(expenses);
+
     return Container(
       height: 100,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 16.0),
         children: [
-          _buildSummaryCard('Weekly', '\$1,200', Colors.green),
-          _buildSummaryCard('Monthly', '\$4,800', Colors.blue),
-          _buildSummaryCard('Yearly', '\$57,600', Colors.orange),
+          _buildSummaryCard('Weekly', '\$${weeklyTotal.toStringAsFixed(0)}', Colors.green),
+          _buildSummaryCard('Monthly', '\$${monthlyTotal.toStringAsFixed(0)}', Colors.blue),
+          _buildSummaryCard('Yearly', '\$${yearlyTotal.toStringAsFixed(0)}', Colors.orange),
         ],
       ),
     );
+  }
+
+  double _calculateWeeklyTotal(List<Expense> expenses) {
+    final weekAgo = DateTime.now().subtract(Duration(days: 7));
+    return expenses
+        .where((expense) => expense.date != null && expense.date!.isAfter(weekAgo))
+        .fold(0.0, (sum, expense) => sum + expense.amount);
+  }
+
+  double _calculateMonthlyTotal(List<Expense> expenses) {
+    final monthAgo = DateTime.now().subtract(Duration(days: 30));
+    return expenses
+        .where((expense) => expense.date != null && expense.date!.isAfter(monthAgo))
+        .fold(0.0, (sum, expense) => sum + expense.amount);
+  }
+
+  double _calculateYearlyTotal(List<Expense> expenses) {
+    final yearAgo = DateTime.now().subtract(Duration(days: 365));
+    return expenses
+        .where((expense) => expense.date != null && expense.date!.isAfter(yearAgo))
+        .fold(0.0, (sum, expense) => sum + expense.amount);
   }
 
   Widget _buildSummaryCard(String period, String amount, Color color) {
@@ -207,17 +269,25 @@ class _ExamplePageState extends State<ExamplePage> {
     );
   }
 
-  Widget _buildTransactionsList() {
+  Widget _buildTransactionsList(List<Expense> expenses) {
+    expenses.sort((a, b) => (b.date ?? DateTime.now()).compareTo(a.date ?? DateTime.now()));
+
     return ListView.builder(
-      itemCount: _transactions.length,
+      itemCount: expenses.length,
       itemBuilder: (context, index) {
-        final transaction = _transactions[index];
-        return _buildTransactionItem(transaction);
+        final expense = expenses[index];
+        return _buildTransactionItem(expense);
       },
     );
   }
 
-  Widget _buildTransactionItem(Transaction transaction) {
+  Widget _buildTransactionItem(Expense expense) {
+    final categoryText = expense.categoryIds.isEmpty
+        ? 'Uncategorized'
+        : expense.categoryIds.length == 1
+        ? 'Category ${expense.categoryIds.first}'
+        : 'Multiple Categories';
+
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       elevation: 1,
@@ -226,37 +296,95 @@ class _ExamplePageState extends State<ExamplePage> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: transaction.amount > 0
+            color: expense.amount > 0
                 ? Colors.green.withOpacity(0.2)
                 : Colors.red.withOpacity(0.2),
             borderRadius: BorderRadius.circular(8.0),
           ),
           child: Icon(
-            transaction.amount > 0 ? Icons.arrow_upward : Icons.arrow_downward,
-            color: transaction.amount > 0 ? Colors.green : Colors.red,
+            expense.amount > 0 ? Icons.arrow_upward : Icons.arrow_downward,
+            color: expense.amount > 0 ? Colors.green : Colors.red,
             size: 20,
           ),
         ),
         title: Text(
-          transaction.title,
+          expense.description.isEmpty ? 'No Description' : expense.description,
           style: TextStyle(
             fontWeight: FontWeight.w500,
           ),
         ),
         subtitle: Text(
-          '${DateFormat('MMM dd, yyyy').format(transaction.date)} • ${transaction.category}',
+          '${expense.date != null ? DateFormat('MMM dd, yyyy').format(expense.date!) : 'No date'} • $categoryText',
           style: TextStyle(
             color: Colors.grey[600],
           ),
         ),
         trailing: Text(
-          '\$${transaction.amount.abs().toStringAsFixed(2)}',
+          '\$${expense.amount.abs().toStringAsFixed(2)}',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: transaction.amount > 0 ? Colors.green : Colors.red,
+            color: expense.amount > 0 ? Colors.green : Colors.red,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text('Loading expenses...'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error, size: 64, color: Colors.red),
+          SizedBox(height: 16),
+          Text('Failed to load expenses'),
+          SizedBox(height: 8),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              error,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _refreshExpenses,
+            child: Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.receipt_long, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'No expenses found',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Text('Add your first expense to get started'),
+        ],
       ),
     );
   }
@@ -284,13 +412,4 @@ class _ExamplePageState extends State<ExamplePage> {
       },
     );
   }
-}
-
-class Transaction {
-  final String title;
-  final double amount;
-  final DateTime date;
-  final String category;
-
-  Transaction(this.title, this.amount, this.date, this.category);
 }

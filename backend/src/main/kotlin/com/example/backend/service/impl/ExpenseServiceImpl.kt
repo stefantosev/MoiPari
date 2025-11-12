@@ -1,6 +1,5 @@
 package com.example.backend.service.impl
 
-import com.example.backend.model.Enums.PAYMENT
 import com.example.backend.model.Expense
 import com.example.backend.model.dto.ExpenseRequest
 import com.example.backend.model.dto.ExpenseResponse
@@ -9,7 +8,6 @@ import com.example.backend.repository.ExpenseRepository
 import com.example.backend.repository.UserRepository
 import com.example.backend.service.ExpenseService
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository, private val userRepository: UserRepository, private val categoryRepository: CategoryRepository) : ExpenseService {
@@ -78,6 +76,10 @@ class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository, priva
 
     override fun getExpensesByCategoryId(categoryId: Int): List<ExpenseResponse> {
         return expenseRepository.findAllByCategoriesId(categoryId).map {ExpenseResponse.fromEntity(it)}
+    }
+
+    override fun getExpensesByUserId(userId: Int): List<ExpenseResponse> {
+        return expenseRepository.findAllExpensesByUserId(userId).map {ExpenseResponse.fromEntity(it) }
     }
 
 }

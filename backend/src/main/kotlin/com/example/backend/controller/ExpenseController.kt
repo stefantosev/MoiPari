@@ -51,4 +51,10 @@ class ExpenseController(private val expenseService: ExpenseService) {
         val expenses = expenseService.getExpensesByCategoryId(categoryId)
         return ResponseEntity.ok(expenses)
     }
+    @GetMapping("/user/{userId}")
+    fun getExpensesByUserId(@PathVariable userId: Int): ResponseEntity<List<ExpenseResponse>> {
+        val expenses = expenseService.getExpensesByUserId(userId)
+        return ResponseEntity.ok(expenses)
+    }
+
 }
