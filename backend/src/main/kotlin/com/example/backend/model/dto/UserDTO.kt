@@ -16,7 +16,8 @@ data class UserResponse(
     val email: String,
     val name: String?,
     val currency: String,
-    val createdAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val password: String,
 ){
     companion object{
         fun fromEntity(user: User) : UserResponse{
@@ -25,7 +26,8 @@ data class UserResponse(
                 email = user.email,
                 name = user.name,
                 currency = user.currency,
-                createdAt = user.createdAt
+                createdAt = user.createdAt,
+                password = user.password
             )
         }
     }

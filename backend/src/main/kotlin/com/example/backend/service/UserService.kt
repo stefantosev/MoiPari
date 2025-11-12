@@ -12,4 +12,5 @@ interface UserService {
     fun updateUser(id: Int, request: UserRequest): UserResponse?
     fun getUsers(): List<UserResponse>
     fun getUserById(id: Int): UserResponse
+    fun getByEmail(email: String) : UserResponse
 }

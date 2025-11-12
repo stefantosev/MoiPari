@@ -5,16 +5,17 @@ import com.example.backend.model.dto.UserRequest
 import com.example.backend.model.dto.UserResponse
 import com.example.backend.repository.UserRepository
 import com.example.backend.service.UserService
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
-class UserServiceImpl(private val userRepository: UserRepository) : UserService {
+class UserServiceImpl(private val userRepository: UserRepository, private val passwordEncoder: BCryptPasswordEncoder) : UserService {
 
     override fun createUser(request: UserRequest): UserResponse {
         val user = User(
             name = request.name,
             email = request.email,
-            password = request.password,
+            password = passwordEncoder.encode(request.password),
             currency = request.currency
         )
         val savedUser = userRepository.save(user)
@@ -32,7 +33,7 @@ class UserServiceImpl(private val userRepository: UserRepository) : UserService 
         val updatedUser = existingUser.copy(
             name = request.name,
             email = request.email,
-            password = request.password,
+            password = passwordEncoder.encode(request.password),
             currency = request.currency
         )
         val savedUser = userRepository.save(updatedUser)
@@ -46,6 +47,11 @@ class UserServiceImpl(private val userRepository: UserRepository) : UserService 
     override fun getUserById(id: Int): UserResponse {
         val user = userRepository.findById(id)
             .orElseThrow { Exception("User not found") }
+        return UserResponse.fromEntity(user)
+    }
+
+    override fun getByEmail(email: String): UserResponse {
+        val user = userRepository.findByEmail(email)
         return UserResponse.fromEntity(user)
     }
 }

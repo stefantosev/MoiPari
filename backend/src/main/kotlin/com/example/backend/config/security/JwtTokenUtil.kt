@@ -1,7 +1,6 @@
 package com.example.backend.config.security
 
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
 import org.springframework.stereotype.Component
 import java.util.*
@@ -9,7 +8,7 @@ import javax.crypto.SecretKey
 
 @Component
 class JwtTokenUtil {
-    private val secret = "YOUR_SECRET"
+    private val secret = ""
     private val expiration = 6000000
     val key: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
 
