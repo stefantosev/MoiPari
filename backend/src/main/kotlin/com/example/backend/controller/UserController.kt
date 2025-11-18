@@ -54,7 +54,7 @@ class UserController(private val userService: UserService, private val passwordE
     fun register(@RequestBody user: UserRequest): Map<String, String> {
 
         val saved = userService.createUser(user.copy(password = user.password))
-
+        
         // auto login??
         val token = jwtTokenUtil.generateToken(saved.email, saved.id.toString());
 
@@ -80,6 +80,7 @@ class UserController(private val userService: UserService, private val passwordE
             "token" to token,
             "type" to "Bearer",
             "userId" to user.id.toString(),
+            "email" to user.email
         )
     }
 

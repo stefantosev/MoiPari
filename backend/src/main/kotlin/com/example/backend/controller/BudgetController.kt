@@ -4,15 +4,25 @@ import com.example.backend.model.dto.BudgetRequest
 import com.example.backend.model.dto.BudgetResponse
 import com.example.backend.service.BudgetService
 import org.springframework.http.ResponseEntity
+import com.example.backend.config.security.JwtTokenUtil
 import org.springframework.web.bind.annotation.*
 
 
 @RestController
 @RequestMapping("/api/budget")
-class BudgetController(private val budgetService: BudgetService) {
+class BudgetController(
+    private val budgetService: BudgetService,
+    private val jwtTokenUtil: JwtTokenUtil
+) {
 
     @PostMapping
-    fun createBudget(@RequestBody request: BudgetRequest): ResponseEntity<BudgetResponse> {
+    fun createBudget(
+        @RequestBody request: BudgetRequest,
+        @RequestHeader("Authorization") authorizationHeader: String
+    ): ResponseEntity<BudgetResponse> {
+        val token = extractToken(authorizationHeader)
+        val userId = jwtTokenUtil.getUserId(token).toInt()
+
         val createdBudget = budgetService.createBudget(request)
         return ResponseEntity.ok(createdBudget)
     }
@@ -64,6 +74,9 @@ class BudgetController(private val budgetService: BudgetService) {
         return ResponseEntity.ok(totalBudget)
     }
 
+    private fun extractToken(authorizationHeader: String): String {
+        return authorizationHeader.replace("Bearer ", "")
+    }
 //    @GetMapping("/remaining-budget")
 //    fun getRemainingBudget(
 //        @RequestParam userId: Int,
