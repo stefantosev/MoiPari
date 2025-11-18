@@ -6,7 +6,7 @@ import 'package:mobile/models/category.dart';
 import 'auth_service.dart';
 
 class CategoryService {
-  static const String baseUrl = "http://10.0.2.2:8080/api/categories";
+  static const String baseUrl = "http://localhost:8080/api/categories";
 
   Future<List<Category>> getCategories() async {
     try {

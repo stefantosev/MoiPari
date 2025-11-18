@@ -8,7 +8,7 @@ class ExpensePage extends ConsumerWidget {
   const ExpensePage({super.key, required this.categoryId});
   final String? categoryId;
 
-
+  //TODO: RISOT add,delete,update se zimaat site (FILTER ZA KATEGORIJA)
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

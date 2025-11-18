@@ -7,4 +7,6 @@ class BudgetPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Placeholder();
   }
+
+  //TODO: WALKORION??: add, update, delete budget, CONVERT CURRENCY (from backend)
 }

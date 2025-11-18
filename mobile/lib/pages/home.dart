@@ -1,102 +1,101 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/models/category.dart';
+import 'package:mobile/pages/expenses.dart';
+import 'package:mobile/providers/navigation_provider.dart';
+import 'package:mobile/service/expense_service.dart';
 
-import 'categories.dart';
-import 'login.dart';
-import 'register.dart';
+import '../service/category_service.dart';
+import '../widgets/card.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
+  //TODO: WALKORION
+
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _CategoryPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _CategoryPageState extends ConsumerState<HomePage> {
+  final CategoryService _services = CategoryService();
+  late Future<List<Category>> _categoriesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _categoriesFuture = _services.getCategories();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final navNotifier = ref.read(navigationIndexProvider.notifier);
+
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Categories'),
+        backgroundColor: Colors.deepPurpleAccent,
+        foregroundColor: Colors.white,
+      ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFFFC1CC), Color(0xFFFFA6C9)],
-          ),
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(30.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.deepPurpleAccent,
+        child: Stack(
+          children: [
+            Positioned(
+              top: 200,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: FutureBuilder<List<Category>>(
+                  future: _categoriesFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (snapshot.hasData) {
+                      final categories = snapshot.data!;
+                      return ListView.builder(
+                        itemCount: categories.length,
+                        itemBuilder: (context, index){
+                          final categoryId = categories[index];
+                          return ListTile(
+                            title: Text(categories[index].name),
+                            onTap: () {
+                              ref.read(selectedCategoryIdProvider.notifier).state = categoryId.id.toString();
+                              navNotifier.state = 2;
+                            }
+                          );
+                        },
+                      );
+                    } else {
+                      return const Center(child: Text('No categories found.'));
+                    }
+                  },
+                ),
+              ),
+            ),
+
+            Column(
               children: [
-                Image.asset('assets/images/MoiPari.png', height: 180),
-
-                const SizedBox(height: 100),
-
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginPage()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Sign in',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
                 const SizedBox(height: 20),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => RegisterPage()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0x00ff1493),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
+                CreditCardWidget(),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
-
   }
 }

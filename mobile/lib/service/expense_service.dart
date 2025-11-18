@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:mobile/models/expense.dart';
 
 class ExpenseService {
-  String baseUrl = "http://10.0.02.02:8080/api/expenses";
+  String baseUrl = "http://localhost:8080/api/expenses";
 
   Future<List<Expense>> getExpenses() async {
     try {
