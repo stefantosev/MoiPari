@@ -19,6 +19,15 @@ class MainWrapper extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final currentIndex = ref.watch(navigationIndexProvider);
 
+
+    if (authState.isLoading && !authState.isAuthenticated && !authState.isFirstLaunch) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     if (authState.isFirstLaunch) {
       return WelcomePage();
     }

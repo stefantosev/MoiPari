@@ -7,6 +7,7 @@ import com.example.backend.model.dto.CategoryResponse
 import com.example.backend.repository.CategoryRepository
 import com.example.backend.repository.UserRepository
 import com.example.backend.service.CategoryService
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 
 @Service
@@ -15,8 +16,8 @@ class CategoryServiceImpl(
     private val userRepository: UserRepository
 ) : CategoryService {
 
-    override fun createCategory(request: CategoryRequest): CategoryResponse {
-        val user = userRepository.findById(request.userId)
+    override fun createCategory(request: CategoryRequest, userId: Int): CategoryResponse {
+        val user = userRepository.findById(userId)
             .orElseThrow { Exception("User not found") }
 
         val category = Category(
@@ -30,15 +31,18 @@ class CategoryServiceImpl(
         return CategoryResponse.fromEntity(savedCategory)
     }
 
-    override fun deleteCategory(id: Int) {
-        categoryRepository.deleteById(id)
+    @Transactional
+    override fun deleteCategory(id: Int, userId: Int) {
+        val category = categoryRepository.findByIdAndUserId(id, userId)
+            ?: throw IllegalArgumentException("Category not found or you don't have permission")
+        categoryRepository.delete(category)
     }
 
-    override fun updateCategory(id: Int, request: CategoryRequest): CategoryResponse {
+    override fun updateCategory(id: Int, request: CategoryRequest, userId: Int): CategoryResponse {
         val existingCategory = categoryRepository.findById(id)
             .orElseThrow { Exception("Category not found") }
 
-        val user = userRepository.findById(request.userId)
+        val user = userRepository.findById(userId)
             .orElseThrow { Exception("User not found") }
 
         val updatedCategory = existingCategory.copy(
@@ -63,5 +67,10 @@ class CategoryServiceImpl(
 
     override fun getCategoriesByUser(userId: Int): List<CategoryResponse> {
         return categoryRepository.findByUserId(userId).map { CategoryResponse.fromEntity(it) }
+    }
+    override fun getCategoryByIdAndUser(id: Int, userId: Int): CategoryResponse? {
+        val category = categoryRepository.findByIdAndUserId(id, userId)
+            ?: throw IllegalArgumentException("Category not found or you don't have permission")
+        return CategoryResponse.fromEntity(category)
     }
 }

@@ -53,10 +53,17 @@ class UserController(private val userService: UserService, private val passwordE
     @PostMapping("/register")
     fun register(@RequestBody user: UserRequest): Map<String, String> {
 
-        val saved = userService.createUser(
-            user.copy(password = user.password)
+        val saved = userService.createUser(user.copy(password = user.password))
+
+        // auto login??
+        val token = jwtTokenUtil.generateToken(saved.email, saved.id.toString());
+
+        return mapOf(
+            "message" to "User registered",
+            "id" to saved.id.toString(),
+            "token" to token,
+            "email" to saved.email
         )
-        return mapOf("message" to "User registered", "id" to saved.id.toString())
     }
 
 
@@ -68,8 +75,12 @@ class UserController(private val userService: UserService, private val passwordE
             return mapOf("error" to "Invalid email or password")
         }
 
-        val token = jwtTokenUtil.generateToken(user.email)
-        return mapOf("token" to token, "type" to "Bearer")
+        val token = jwtTokenUtil.generateToken(user.email, user.id.toString())
+        return mapOf(
+            "token" to token,
+            "type" to "Bearer",
+            "userId" to user.id.toString(),
+        )
     }
 
 }

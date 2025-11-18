@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/pages/categories.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
 
-// TODO: RIVERPOD AND CONSUMER WIDGET ??
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class RegisterPage extends ConsumerWidget {
+  RegisterPage({super.key});
 
-  @override
-  _RegisterPageState createState() => _RegisterPageState();
-}
-
-class _RegisterPageState extends State<RegisterPage> {
   final _userNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
-  void dispose() {
-    _userNameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+    final authNotifier = ref.read(authStateProvider.notifier);
 
-  @override
-  Widget build(BuildContext context) {
+    if (authState.isAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/main');
+      });
+    }
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -45,8 +41,45 @@ class _RegisterPageState extends State<RegisterPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      Align(
+                        alignment: Alignment.topLeft,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.black),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+
                       Image.asset("assets/images/MoiPari.png"),
-                      SizedBox(height: 26),
+                      const SizedBox(height: 26),
+
+                      if (authState.error != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.red[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error, color: Colors.red, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  authState.error!,
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 16),
+                                onPressed: () => authNotifier.clearError(),
+                              ),
+                            ],
+                          ),
+                        ),
+
                       TextField(
                         controller: _userNameController,
                         decoration: InputDecoration(
@@ -58,7 +91,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 26),
+                      const SizedBox(height: 16),
                       TextField(
                         controller: _emailController,
                         decoration: InputDecoration(
@@ -69,8 +102,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+                        keyboardType: TextInputType.emailAddress,
                       ),
-                      SizedBox(height: 26),
+                      const SizedBox(height: 16),
                       TextField(
                         controller: _passwordController,
                         decoration: InputDecoration(
@@ -83,17 +117,19 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         obscureText: true,
                       ),
-                      SizedBox(height: 26),
+                      const SizedBox(height: 26),
+
                       SizedBox(
                         width: double.infinity,
                         height: 49,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => CategoryPage(),
-                                ),
+                          onPressed: authState.isLoading
+                              ? null
+                              : () {
+                            authNotifier.register(
+                              _userNameController.text.trim(),
+                              _emailController.text.trim(),
+                              _passwordController.text,
                             );
                           },
                           style: ElevatedButton.styleFrom(
@@ -102,7 +138,16 @@ class _RegisterPageState extends State<RegisterPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: Text(
+                          child: authState.isLoading
+                              ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                              : const Text(
                             "Register",
                             style: TextStyle(
                               color: Colors.white,
@@ -112,6 +157,21 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                       ),
+
+                      const SizedBox(height: 16),
+
+                      if (authState.isLoading)
+                        const Column(
+                          children: [
+                            SizedBox(height: 16),
+                            CircularProgressIndicator(),
+                            SizedBox(height: 8),
+                            Text(
+                              "Creating account...",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),

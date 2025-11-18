@@ -13,13 +13,15 @@ class JwtTokenUtil {
     val key: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
 
 
-    fun generateToken(username: String) : String =
-        Jwts.builder().subject(username).expiration(Date(System.currentTimeMillis() + expiration))
+    fun generateToken(username: String, userId: String) : String =
+        Jwts.builder().subject(username).claim("userId", userId).expiration(Date(System.currentTimeMillis() + expiration))
             .signWith(key, Jwts.SIG.HS512).compact()
 
     private fun getClaims(token: String) = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
 
     fun getEmail(token: String) : String = getClaims(token).subject
+
+    fun getUserId(token: String) : String = getClaims(token).get("userId", String::class.java)
 
     fun isTokenValid(token: String): Boolean {
         val claims = getClaims(token)

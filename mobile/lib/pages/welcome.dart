@@ -40,6 +40,7 @@ class WelcomePage extends ConsumerWidget {
                   ElevatedButton(
                     onPressed: () {
                       ref.read(authStateProvider.notifier).completeWelcome();
+                      Navigator.pushReplacementNamed(context, '/login');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurpleAccent,

@@ -6,7 +6,6 @@ data class CategoryRequest(
     val name: String,
     val icon: String,
     val color: String,
-    val userId: Int
 )
 
 
@@ -24,7 +23,7 @@ data class CategoryResponse(
                 id = category.id,
                 name = category.name,
                 icon = category.icon,
-                color = category.icon,
+                color = category.color,
                 userId = category.user?.id?:0,
                 expenseIds =  category.expenses.map { it.id }
             )
