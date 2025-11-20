@@ -82,4 +82,8 @@ class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository, priva
         return expenseRepository.findAllExpensesByUserId(userId).map {ExpenseResponse.fromEntity(it) }
     }
 
+    override fun getExpenseByIdAndUser(id: Int, userId: Int): ExpenseResponse {
+        return ExpenseResponse.fromEntity(expenseRepository.findByIdAndUserId(id, userId));
+    }
+
 }

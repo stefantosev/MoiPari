@@ -1,31 +1,36 @@
 package com.example.backend.controller
 
+import com.example.backend.config.security.JwtTokenUtil
 import com.example.backend.model.dto.ExpenseRequest
 import com.example.backend.model.dto.ExpenseResponse
 import com.example.backend.service.ExpenseService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/expenses")
-class ExpenseController(private val expenseService: ExpenseService) {
+class ExpenseController(private val expenseService: ExpenseService, private val jwtTokenUtil: JwtTokenUtil) {
 
     @GetMapping
-    fun getAllExpenses(): ResponseEntity<List<ExpenseResponse>> {
-        return ResponseEntity.ok(expenseService.getExpenses())
+    fun getAllExpenses(@RequestHeader("Authorization") authorizationHeader: String): ResponseEntity<List<ExpenseResponse>> {
+
+        val token = extractToken(authorizationHeader)
+        val userId = jwtTokenUtil.getUserId(token).toInt()
+
+        val expenses = expenseService.getExpensesByUserId(userId)
+
+        return ResponseEntity.ok(expenses)
     }
 
     @GetMapping("/{id}")
-    fun getExpenseById(@PathVariable id: Int): ResponseEntity<ExpenseResponse> {
-        return ResponseEntity.ok(expenseService.getExpenseById(id))
+    fun getExpenseById(@RequestHeader("Authorization") authorizationHeader: String, @PathVariable id: Int): ResponseEntity<ExpenseResponse> {
+        val token = extractToken(authorizationHeader)
+        val userId = jwtTokenUtil.getUserId(token).toInt()
+
+        val expense = expenseService.getExpenseByIdAndUser(id,userId)
+        
+        return ResponseEntity.ok(expense)
     }
 
     @PostMapping
@@ -51,10 +56,15 @@ class ExpenseController(private val expenseService: ExpenseService) {
         val expenses = expenseService.getExpensesByCategoryId(categoryId)
         return ResponseEntity.ok(expenses)
     }
+
     @GetMapping("/user/{userId}")
     fun getExpensesByUserId(@PathVariable userId: Int): ResponseEntity<List<ExpenseResponse>> {
         val expenses = expenseService.getExpensesByUserId(userId)
         return ResponseEntity.ok(expenses)
+    }
+
+    private fun extractToken(authorizationHeader: String): String {
+        return authorizationHeader.replace("Bearer ", "")
     }
 
 }

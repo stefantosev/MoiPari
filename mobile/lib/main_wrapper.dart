@@ -5,8 +5,6 @@ import 'package:mobile/pages/budget.dart';
 import 'package:mobile/pages/home.dart';
 import 'package:mobile/pages/expenses.dart';
 import 'package:mobile/pages/auth.dart';
-import 'package:mobile/pages/example.dart';
-import 'package:mobile/pages/login.dart';
 import 'package:mobile/pages/profile.dart';
 import 'package:mobile/pages/welcome.dart';
 import 'package:mobile/providers/auth_provider.dart';
@@ -52,7 +50,7 @@ class MainWrapper extends ConsumerWidget {
       case 1:
         return BudgetPage();
       case 2:
-        return ExpensePage(categoryId: "0");
+        return ExpensePage();
       case 3:
         return AnalyticsPage();
       case 4:
