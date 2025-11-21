@@ -6,7 +6,7 @@ import 'package:mobile/models/expense.dart';
 import 'package:mobile/service/auth_service.dart';
 
 class ExpenseService {
-  String baseUrl = "http://10.0.2.2:8080/api/expenses";
+  String baseUrl = "http://localhost:8080/api/expenses";
 
   Future<List<Expense>> getExpenses() async {
     try {
