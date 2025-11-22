@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service
 
 @Service
 interface ExpenseService {
-    fun createExpense(request: ExpenseRequest): ExpenseResponse
-    fun deleteExpense(id: Int)
-    fun updateExpense(id: Int, request: ExpenseRequest): ExpenseResponse
+    fun createExpense(request: ExpenseRequest, userId: Int): ExpenseResponse
+    fun deleteExpense(id: Int, userId: Int)
+    fun updateExpense(id: Int, request: ExpenseRequest, userId: Int): ExpenseResponse
     fun getExpenseById(id: Int): ExpenseResponse
     fun getExpenses(): List<ExpenseResponse>
     fun getExpensesByCategoryId(categoryId: Int): List<ExpenseResponse>

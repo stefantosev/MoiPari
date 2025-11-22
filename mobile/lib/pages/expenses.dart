@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/pages/add_edit_expense.dart';
 import '../providers/real_provider.dart';
 
 class ExpensePage extends ConsumerWidget {
@@ -14,14 +15,11 @@ class ExpensePage extends ConsumerWidget {
         title: const Text('All Expenses'),
         backgroundColor: Colors.deepPurpleAccent,
       ),
-
       body: expenseAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-
         error: (err, stack) => Center(
           child: Text('Error: $err'),
         ),
-
         data: (expenses) {
           if (expenses.isEmpty) {
             return const Center(
@@ -47,12 +45,35 @@ class ExpensePage extends ConsumerWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text("${e.amount} \$"),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddEditExpensePage(expense: e),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          ref.read(expenseProvider.notifier).deleteExpense(e.id);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
           );
         },
       ),
+     
     );
   }
 }

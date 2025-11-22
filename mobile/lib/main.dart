@@ -1,6 +1,5 @@
 
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/pages/welcome.dart';
@@ -34,7 +33,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
-      title: 'Your App Name',
+      title: 'MoiPari',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,

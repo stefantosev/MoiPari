@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/pages/add_edit_expense.dart';
 import 'package:mobile/pages/analytics.dart';
 import 'package:mobile/pages/budget.dart';
 import 'package:mobile/pages/home.dart';
@@ -40,6 +41,14 @@ class MainWrapper extends ConsumerWidget {
     return Scaffold(
       body: _getPage(currentIndex),
       bottomNavigationBar: NavBar(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddExpenseModal(context);
+        },
+        backgroundColor: Colors.deepPurpleAccent,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -59,4 +68,32 @@ class MainWrapper extends ConsumerWidget {
         return AuthPage();
     }
   }
+
+void _showAddExpenseModal(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.9, 
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: const AddEditExpensePage(),
+        ),
+      ),
+    ),
+  );
 }
+}
+ 

@@ -24,30 +24,49 @@ class ExpenseController(private val expenseService: ExpenseService, private val 
     }
 
     @GetMapping("/{id}")
-    fun getExpenseById(@RequestHeader("Authorization") authorizationHeader: String, @PathVariable id: Int): ResponseEntity<ExpenseResponse> {
+    fun getExpenseById(
+        @RequestHeader("Authorization") authorizationHeader: String,
+        @PathVariable id: Int
+    ): ResponseEntity<ExpenseResponse> {
         val token = extractToken(authorizationHeader)
         val userId = jwtTokenUtil.getUserId(token).toInt()
 
-        val expense = expenseService.getExpenseByIdAndUser(id,userId)
-        
+        val expense = expenseService.getExpenseByIdAndUser(id, userId)
+
         return ResponseEntity.ok(expense)
     }
 
     @PostMapping
-    fun createExpense(@RequestBody expense: ExpenseRequest): ResponseEntity<ExpenseResponse> {
+    fun createExpense(
+        @RequestHeader("Authorization") authorizationHeader: String,
+        @RequestBody expense: ExpenseRequest
+    ): ResponseEntity<ExpenseResponse> {
+        val token = extractToken(authorizationHeader)
+        val userId = jwtTokenUtil.getUserId(token).toInt();
+
+        val createdExpense = expenseService.createExpense(expense, userId);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(expenseService.createExpense((expense)))
+            .body(createdExpense)
     }
 
     @PutMapping("/{id}")
-    fun updateExpense(@PathVariable id: Int, @RequestBody expense: ExpenseRequest): ResponseEntity<ExpenseResponse> {
-        return ResponseEntity.ok(expenseService.updateExpense(id, expense))
+    fun updateExpense(@RequestHeader("Authorization") authorizationHeader: String, @PathVariable id: Int, @RequestBody expense: ExpenseRequest): ResponseEntity<ExpenseResponse> {
+        val token = extractToken(authorizationHeader)
+        val userId = jwtTokenUtil.getUserId(token).toInt();
+
+        val updatedExpense = expenseService.updateExpense(id, expense, userId)
+        return ResponseEntity.ok(updatedExpense)
     }
 
 
     @DeleteMapping("/{id}")
-    fun deleteExpense(@PathVariable id: Int): ResponseEntity<Void> {
-        expenseService.deleteExpense(id)
+    fun deleteExpense(@RequestHeader("Authorization") authorizationHeader: String, @PathVariable id: Int): ResponseEntity<Void> {
+        val token = extractToken(authorizationHeader)
+        val userId = jwtTokenUtil.getUserId(token).toInt()
+
+        expenseService.deleteExpense(id,userId)
+
         return ResponseEntity.noContent().build()
     }
 
