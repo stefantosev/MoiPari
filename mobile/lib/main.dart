@@ -1,6 +1,3 @@
-
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/pages/welcome.dart';
@@ -35,10 +32,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Your App Name',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
       routes: {
         '/': (context) => const MainWrapper(),
         '/main': (context) => const MainWrapper(),
@@ -49,9 +43,7 @@ class MyApp extends ConsumerWidget {
       initialRoute: '/',
 
       onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => const MainWrapper(),
-        );
+        return MaterialPageRoute(builder: (context) => const MainWrapper());
       },
     );
   }
