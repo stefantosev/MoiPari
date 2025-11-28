@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/models/DTO/expense_request.dart';
 import 'package:mobile/models/expense.dart';
-import 'package:mobile/models/category.dart';
 import 'package:mobile/providers/real_provider.dart';
 
 class AddEditExpensePage extends ConsumerStatefulWidget {
@@ -80,188 +79,201 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
       if (widget.expense == null) {
         ref.read(expenseProvider.notifier).addExpense(expenseRequest);
       } else {
-        ref.read(expenseProvider.notifier).updateExpense(widget.expense!.id, expenseRequest);
+        ref
+            .read(expenseProvider.notifier)
+            .updateExpense(widget.expense!.id, expenseRequest);
       }
       Navigator.pop(context);
     }
   }
 
   void _selectCategories() {
+    ref.invalidate(categoryProvider);
 
-     ref.invalidate(categoryProvider);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Consumer(
+        builder: (context, ref, child) {
+          final categoriesAsync = ref.watch(categoryProvider);
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => Consumer(
-      builder: (context, ref, child) {
-        final categoriesAsync = ref.watch(categoryProvider);
-        
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.85,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(25),
-              topRight: Radius.circular(25),
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
             ),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(25),
-                    topRight: Radius.circular(25),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(25),
+                      topRight: Radius.circular(25),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Select Categories',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.refresh, color: Colors.grey),
+                            onPressed: () {
+                              ref.invalidate(categoryProvider);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.grey),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Select Categories',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.refresh, color: Colors.grey),
-                          onPressed: () {
-                            ref.invalidate(categoryProvider); 
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.grey),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: categoriesAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(child: Text('Error: $error')),
-                  data: (categories) => StatefulBuilder(
-                    builder: (context, setModalState) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 1.2,
-                          ),
-                          itemCount: categories.length,
-                          itemBuilder: (context, index) {
-                            final category = categories[index];
-                            final isSelected = _selectedCategoryIds.contains(category.id);
-                            
-                            return GestureDetector(
-                              onTap: () {
-                                setModalState(() {
-                                  if (isSelected) {
-                                    _selectedCategoryIds.remove(category.id);
-                                  } else {
-                                    _selectedCategoryIds.add(category.id);
-                                  }
-                                });
-                                setState(() {});
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                decoration: BoxDecoration(
-                                  color: isSelected 
-                                      ? Colors.deepPurpleAccent.withOpacity(0.1)
-                                      : Colors.grey[50],
-                                  borderRadius: BorderRadius.circular(15),
-                                  border: Border.all(
-                                    color: isSelected 
-                                        ? Colors.deepPurpleAccent 
-                                        : Colors.grey[300]!,
-                                    width: isSelected ? 2 : 1,
+                Expanded(
+                  child: categoriesAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, stack) =>
+                        Center(child: Text('Error: $error')),
+                    data: (categories) => StatefulBuilder(
+                      builder: (context, setModalState) {
+                        return Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: GridView.builder(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  childAspectRatio: 1.2,
+                                ),
+                            itemCount: categories.length,
+                            itemBuilder: (context, index) {
+                              final category = categories[index];
+                              final isSelected = _selectedCategoryIds.contains(
+                                category.id,
+                              );
+
+                              return GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    if (isSelected) {
+                                      _selectedCategoryIds.remove(category.id);
+                                    } else {
+                                      _selectedCategoryIds.add(category.id);
+                                    }
+                                  });
+                                  setState(() {});
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? Colors.deepPurpleAccent.withValues(
+                                            alpha: 0.1,
+                                          )
+                                        : Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(15),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Colors.deepPurpleAccent
+                                          : Colors.grey[300]!,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Colors.deepPurpleAccent
+                                              : Colors.grey[200],
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          _getCategoryIcon(category.name),
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Colors.grey[700],
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        category.name,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: isSelected
+                                              ? Colors.deepPurpleAccent
+                                              : Colors.grey[700],
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: isSelected 
-                                            ? Colors.deepPurpleAccent 
-                                            : Colors.grey[200],
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        _getCategoryIcon(category.name),
-                                        color: isSelected ? Colors.white : Colors.grey[700],
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      category.name,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: isSelected ? Colors.deepPurpleAccent : Colors.grey[700],
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurpleAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurpleAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                        elevation: 2,
                       ),
-                      elevation: 2,
-                    ),
-                    child: const Text(
-                      'Done',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-}
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   IconData _getCategoryIcon(String categoryName) {
     switch (categoryName.toLowerCase()) {
@@ -288,6 +300,7 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
           widget.expense == null ? 'Add Expense' : 'Edit Expense',
@@ -304,7 +317,9 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
             IconButton(
               icon: const Icon(Icons.delete_outline),
               onPressed: () {
-                ref.read(expenseProvider.notifier).deleteExpense(widget.expense!.id);
+                ref
+                    .read(expenseProvider.notifier)
+                    .deleteExpense(widget.expense!.id);
                 Navigator.pop(context);
               },
             ),
@@ -338,7 +353,9 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
-                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: const InputDecoration(
                           hintText: '0.00',
                           hintStyle: TextStyle(color: Colors.grey),
@@ -419,9 +436,9 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _selectedDate == null 
-                                ? 'Select Date' 
-                                : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                              _selectedDate == null
+                                  ? 'Select Date'
+                                  : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -435,6 +452,7 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildInputCard(
+                        onTap: _showPaymentMethodModal,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -447,25 +465,29 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedPaymentMethod,
-                                isExpanded: true,
-                                icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                                hint: const Text(
-                                  'Select',
-                                  style: TextStyle(color: Colors.grey),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _selectedPaymentMethod == null
+                                        ? 'Select payment method'
+                                        : _selectedPaymentMethod == 'CASH'
+                                        ? 'Cash'
+                                        : 'Card',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: _selectedPaymentMethod == null
+                                          ? Colors.grey
+                                          : Colors.black87,
+                                    ),
+                                  ),
                                 ),
-                                items: const [
-                                  DropdownMenuItem(value: 'CASH', child: Text('Cash')),
-                                  DropdownMenuItem(value: 'CARD', child: Text('Card')),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedPaymentMethod = value;
-                                  });
-                                },
-                              ),
+                                Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.grey[400],
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -493,13 +515,17 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _selectedCategoryIds.isEmpty 
-                                ? 'Select categories' 
-                                : '${_selectedCategoryIds.length} selected',
+                              _selectedCategoryIds.isEmpty
+                                  ? 'Select categories'
+                                  : '${_selectedCategoryIds.length} selected',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: _selectedCategoryIds.isEmpty ? Colors.grey : Colors.deepPurpleAccent,
-                                fontWeight: _selectedCategoryIds.isEmpty ? FontWeight.normal : FontWeight.w600,
+                                color: _selectedCategoryIds.isEmpty
+                                    ? Colors.grey
+                                    : Colors.deepPurpleAccent,
+                                fontWeight: _selectedCategoryIds.isEmpty
+                                    ? FontWeight.normal
+                                    : FontWeight.w600,
                               ),
                             ),
                           ],
@@ -508,7 +534,7 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurpleAccent.withOpacity(0.1),
+                          color: Colors.deepPurpleAccent.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -588,13 +614,170 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: child,
+      ),
+    );
+  }
+
+  void _showPaymentMethodModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.4,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(25),
+            topRight: Radius.circular(25),
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(25),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Payment Method',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.grey),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildPaymentOption(
+                    title: 'Cash',
+                    subtitle: 'Pay with physical cash',
+                    icon: Icons.wallet,
+                    isSelected: _selectedPaymentMethod == 'CASH',
+                    onTap: () {
+                      setState(() {
+                        _selectedPaymentMethod = 'CASH';
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildPaymentOption(
+                    title: 'Card',
+                    subtitle: 'Credit or debit card',
+                    icon: Icons.credit_card,
+                    isSelected: _selectedPaymentMethod == 'CARD',
+                    onTap: () {
+                      setState(() {
+                        _selectedPaymentMethod = 'CARD';
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentOption({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.deepPurpleAccent.withValues(alpha: 0.1)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: isSelected ? Colors.deepPurpleAccent : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.deepPurpleAccent : Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.grey[700],
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected
+                          ? Colors.deepPurpleAccent
+                          : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isSelected
+                          ? Colors.deepPurpleAccent
+                          : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: Colors.deepPurpleAccent,
+                size: 24,
+              ),
+          ],
+        ),
       ),
     );
   }

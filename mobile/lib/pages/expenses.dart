@@ -41,147 +41,166 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildSearchFilterBar(categoriesAsync),
-          
-          Expanded(
-            child: expensesAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation(Colors.deepPurpleAccent),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(expenseProvider.notifier).loadExpenses();
+          await ref.read(categoryProvider.notifier).refreshCategories();
+        },
+        color: Colors.deepPurpleAccent,
+        backgroundColor: Colors.white,
+        child: Column(
+          children: [
+            _buildSearchFilterBar(categoriesAsync),
+            Expanded(
+              child: expensesAsync.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(Colors.deepPurpleAccent),
+                  ),
                 ),
-              ),
-              error: (err, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error loading expenses',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
+                error: (err, stack) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.grey[400],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '$err',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error loading expenses',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        '$err',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          ref.invalidate(expenseProvider);
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              data: (expenses) {
-                final filteredExpenses = _filterExpenses(expenses);
-                
-                if (filteredExpenses.isEmpty) {
-                  return _buildEmptyState();
-                }
+                data: (expenses) {
+                  final filteredExpenses = _filterExpenses(expenses);
+                  
+                  if (filteredExpenses.isEmpty) {
+                    return _buildEmptyState();
+                  }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredExpenses.length,
-                  itemBuilder: (context, index) {
-                    final expense = filteredExpenses[index];
-                    return _buildExpenseCard(expense, context);
-                  },
-                );
-              },
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredExpenses.length,
+                    itemBuilder: (context, index) {
+                      final expense = filteredExpenses[index];
+                      return _buildExpenseCard(expense, context, categoriesAsync);
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
-      child: Column(
-        children: [
-          Container(
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              decoration: const InputDecoration(
-                hintText: 'Search expenses...',
-                hintStyle: TextStyle(color: Colors.grey),
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16),
+Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
+  return Container(
+    padding: const EdgeInsets.all(16),
+    color: Colors.white,
+    child: Column(
+      children: [
+        Container(
+          height: 50,
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: TextField(
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+            },
+            decoration: InputDecoration(
+              hintText: 'Search expenses...',
+              hintStyle: const TextStyle(color: Colors.grey),
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
               ),
+              filled: true,
+              fillColor: Colors.transparent,
             ),
           ),
-          const SizedBox(height: 12),
-          
-          if (_selectedCategoryId != null || _searchQuery.isNotEmpty)
-            Row(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        if (_selectedCategoryId != null)
-                          _buildFilterChip(
-                            label: _getCategoryName(categoriesAsync, _selectedCategoryId!),
-                            onRemove: () {
-                              setState(() {
-                                _selectedCategoryId = null;
-                              });
-                              _loadAllExpenses();
-                            },
-                          ),
-                        if (_searchQuery.isNotEmpty)
-                          _buildFilterChip(
-                            label: 'Search: "$_searchQuery"',
-                            onRemove: () {
-                              setState(() {
-                                _searchQuery = '';
-                              });
-                            },
-                          ),
-                      ],
+        ),
+        const SizedBox(height: 12),
+        
+        if (_selectedCategoryId != null || _searchQuery.isNotEmpty)
+          Row(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      if (_selectedCategoryId != null)
+                        _buildFilterChip(
+                          label: _getCategoryName(categoriesAsync, _selectedCategoryId!),
+                          onRemove: () {
+                            setState(() {
+                              _selectedCategoryId = null;
+                            });
+                            _loadAllExpenses();
+                          },
+                        ),
+                      if (_searchQuery.isNotEmpty)
+                        _buildFilterChip(
+                          label: 'Search: "$_searchQuery"',
+                          onRemove: () {
+                            setState(() {
+                              _searchQuery = '';
+                            });
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              if (_selectedCategoryId != null || _searchQuery.isNotEmpty)
+                TextButton(
+                  onPressed: _clearAllFilters,
+                  child: const Text(
+                    'Clear All',
+                    style: TextStyle(
+                      color: Colors.deepPurpleAccent,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                if (_selectedCategoryId != null || _searchQuery.isNotEmpty)
-                  TextButton(
-                    onPressed: _clearAllFilters,
-                    child: const Text(
-                      'Clear All',
-                      style: TextStyle(
-                        color: Colors.deepPurpleAccent,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
+            ],
+          ),
+      ],
+    ),
+  );
+}
 
   Widget _buildFilterChip({required String label, required VoidCallback onRemove}) {
     return Container(
@@ -216,7 +235,31 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     );
   }
 
-  Widget _buildExpenseCard(Expense expense, BuildContext context) {
+   Category _getExpenseCategory(Expense expense, AsyncValue<List<Category>> categoriesAsync) {
+    return categoriesAsync.when(
+      data: (categories) {
+        if (expense.categoryIds.isNotEmpty) {
+          try {
+            final category = categories.firstWhere(
+              (cat) => cat.id == expense.categoryIds.first,
+              orElse: () => Category(0, 'Uncategorized', 'category', '#9E9E9E', 0, []),
+            );
+            return category;
+          } catch (e) {
+            return Category(0, 'Uncategorized', 'category', '#9E9E9E', 0, []);
+          }
+        }
+        return Category(0, 'Uncategorized', 'category', '#9E9E9E', 0, []);
+      },
+      loading: () => Category(0, 'Loading...', 'category', '#9E9E9E', 0, []),
+      error: (error, stack) => Category(0, 'Error', 'error', '#F44336', 0, []),
+    );
+  }
+  
+
+ Widget _buildExpenseCard(Expense expense, BuildContext context, AsyncValue<List<Category>> categoriesAsync) {
+    final category = _getExpenseCategory(expense, categoriesAsync);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -224,7 +267,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -250,12 +293,12 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.deepPurpleAccent.withOpacity(0.1),
+                    color: category.colorValue.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _getExpenseCategoryIcon(expense),
-                    color: Colors.deepPurpleAccent,
+                    category.iconData,
+                    color: category.colorValue,
                     size: 20,
                   ),
                 ),
@@ -276,12 +319,32 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        _formatDate(expense.date),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            _formatDate(expense.date),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: category.colorValue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              category.name,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: category.colorValue,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -333,7 +396,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     );
   }
 
-  Widget _buildActionButton({
+   Widget _buildActionButton({
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
@@ -343,7 +406,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(
@@ -354,6 +417,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
       ),
     );
   }
+
 
   Widget _buildEmptyState() {
     return Center(
@@ -466,7 +530,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                         _loadExpensesByCategory(category.id);
                         Navigator.pop(context);
                       },
-                    )).toList(),
+                    )),
                   ],
                 ),
               ),
@@ -574,20 +638,13 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
       data: (categories) {
         final category = categories.firstWhere(
           (cat) => cat.id == categoryId,
-          orElse: () => Category(0, "name", "icon", "color", 0, [0]),
+          orElse: () => Category(0, "Unknown", "category", "#9E9E9E", 0, []),
         );
         return category.name;
       },
       loading: () => 'Loading...',
       error: (error, stack) => 'Unknown',
     );
-  }
-
-  IconData _getExpenseCategoryIcon(Expense expense) {
-    if (expense.categoryIds.isNotEmpty) {
-      return Icons.category;
-    }
-    return Icons.receipt;
   }
 
   String _formatDate(DateTime? date) {
