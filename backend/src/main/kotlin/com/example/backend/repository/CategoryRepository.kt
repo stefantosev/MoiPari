@@ -14,4 +14,10 @@ interface CategoryRepository : JpaRepository<Category, Int> {
 
     @Query("SELECT c FROM Category c WHERE c.id = :id AND c.user.id = :userId")
     fun findByIdAndUserId(@Param("id") id: Int, @Param("userId") userId: Int): Category?
+
+    @Query("SELECT c FROM Category c WHERE c.id IN :categoryIds AND c.user.id = :userId")
+    fun findAllCategoriesByIdAndUserId(
+        @Param("categoryIds") categoryIds: List<Int>,
+        @Param("userId") userId: Int
+    ): List<Category>
 }

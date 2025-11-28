@@ -71,8 +71,13 @@ class ExpenseController(private val expenseService: ExpenseService, private val 
     }
 
     @GetMapping("/category/{categoryId}")
-    fun getExpensesByCategoryId(@PathVariable categoryId: Int): ResponseEntity<List<ExpenseResponse>> {
-        val expenses = expenseService.getExpensesByCategoryId(categoryId)
+    fun getExpensesByCategoryId(@RequestHeader("Authorization") authorizationHeader: String, @PathVariable categoryId: Int): ResponseEntity<List<ExpenseResponse>> {
+        
+        val token = extractToken(authorizationHeader)
+        val userId = jwtTokenUtil.getUserId(token).toInt()
+
+
+        val expenses = expenseService.getExpensesByCategoryId(categoryId, userId)
         return ResponseEntity.ok(expenses)
     }
 
