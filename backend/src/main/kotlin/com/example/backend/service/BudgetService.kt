@@ -9,9 +9,9 @@ import java.time.Year
 
 @Service
 interface BudgetService {
-    fun createBudget(request: BudgetRequest) : BudgetResponse
-    fun deleteBudget(id : Int)
-    fun updateBudget(id: Int, request: BudgetRequest) : BudgetResponse
+    fun createBudget(request: BudgetRequest, userId: Int) : BudgetResponse
+    fun deleteBudget(id : Int, userId: Int)
+    fun updateBudget(id: Int, request: BudgetRequest, userId: Int) : BudgetResponse
     fun checkBudgetLimit(userId: Int, month: Int, year: Int) : Boolean
     fun getBudgetsByUser(userId: Int) : List<BudgetResponse>
     fun convertCurrency(amount: Float, fromCurrency: String, toCurrency: String): Float
