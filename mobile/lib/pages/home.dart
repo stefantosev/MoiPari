@@ -6,13 +6,12 @@ import 'package:mobile/providers/navigation_provider.dart';
 import 'package:mobile/service/expense_service.dart';
 import 'package:mobile/widgets/category_popup.dart';
 
+import '../providers/auth_provider.dart';
 import '../service/category_service.dart';
 import '../widgets/card.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
-
-  //TODO: WALKORION
 
   @override
   ConsumerState<HomePage> createState() => _CategoryPageState();
@@ -66,6 +65,7 @@ class _CategoryPageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final navNotifier = ref.read(navigationIndexProvider.notifier);
 
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Categories'),
@@ -109,6 +109,14 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
                               onTap: () async{
+                                final auth = ref.read(authStateProvider);
+                                print("=== CATEGORY PAGE DEBUG ===");
+                                print("isAuthenticated: ${auth.isAuthenticated}");
+                                print("isLoading: ${auth.isLoading}");
+                                print("userId: ${auth.userId}");
+                                print("token: ${auth.token}");
+                                print("error: ${auth.error}");
+                                print("===========================");
                                 //TODO: ADD THE FUNCTIONALITY
                                 final result = await showDialog(
                                     context: context,
@@ -192,17 +200,16 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                                               ),
                                             ),
                                           ),
-
-                                          IconButton(
-                                              onPressed: () => _handleDelete(categories[index].id),
-                                              icon: const Icon(Icons.close, size: 20,color: Colors.red),
-                                              tooltip: 'Delete Category',
-                                          ),
-
                                           IconButton(
                                               onPressed: () => _handleEdit(categories[index]),
                                               icon: const Icon(Icons.edit, size: 20, color: Colors.deepPurpleAccent),
                                           ),
+                                          IconButton(
+                                            onPressed: () => _handleDelete(categories[index].id),
+                                            icon: const Icon(Icons.delete, size: 20,color: Colors.red),
+                                            tooltip: 'Delete Category',
+                                          ),
+
                                         ],
                                       ),
                                     ),
