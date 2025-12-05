@@ -1,22 +1,118 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/providers/auth_provider.dart';
+import 'package:mobile/providers/navigation_provider.dart';
+import 'package:mobile/service/auth_service.dart';
+import 'package:mobile/service/budget_service.dart';
 
-class CreditCardWidget extends StatelessWidget {
+class CreditCardWidget extends ConsumerStatefulWidget {
   const CreditCardWidget({super.key});
 
   @override
+  ConsumerState<CreditCardWidget> createState() => _CreditCardWidgetState();
+}
+
+class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
+  final BudgetService _budgetService = BudgetService();
+  double? _totalBudget;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTotalBudget();
+  }
+
+  Future<void> _loadTotalBudget() async {
+    if (!AuthService.isLoggedIn) {
+      setState(() {
+        _totalBudget = null;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final userId = await AuthService.getUserId();
+      if (userId == null) {
+        setState(() {
+          _totalBudget = null;
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final now = DateTime.now();
+      final total = await _budgetService.getTotalBudget(
+        int.parse(userId),
+        now.month,
+        now.year,
+      );
+
+      setState(() {
+        _totalBudget = total;
+        _isLoading = false;
+        _error = null;
+      });
+    } catch (e) {
+      print("Error loading total budget: $e");
+      setState(() {
+        _totalBudget = null;
+        _isLoading = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          _buildCreditCard(
-            color: Color(0xFF090943),
-            cardExpiration: "08/2026",
-            cardHolder: "ASIM ULATOR",
-            cardNumber: "3546 7532 XXXX 9742",
-          ),
-        ],
+    final authState = ref.watch(authStateProvider);
+    final isAuth = authState.isAuthenticated;
+    final cardHolderName = isAuth ? "AUTHENTICATED USER" : "GUEST USER";
+
+    final now = DateTime.now();
+    final displayMonthYear = "${now.month.toString().padLeft(2, '0')}/${now.year}";
+
+    void navigateToBudget() {
+      if (!isAuth) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please log in to manage budgets.')),
+        );
+        return;
+      } else {
+        ref.read(navigationIndexProvider.notifier).state = 1;
+      }
+    }
+
+    String budgetDisplay;
+    if (!isAuth) {
+      budgetDisplay = "N/A";
+    } else if (_isLoading) {
+      budgetDisplay = "Loading...";
+    } else if (_error != null) {
+      budgetDisplay = "Error";
+    } else if (_totalBudget == null) {
+      budgetDisplay = "No Budget";
+    } else {
+      budgetDisplay = _totalBudget!.toStringAsFixed(2);
+    }
+
+    return GestureDetector(
+      onTap: navigateToBudget,
+      child: Container(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            _buildCreditCard(
+              color: Color(0xFF090943),
+              cardExpiration: displayMonthYear,
+              cardHolder: cardHolderName,
+              cardNumber: budgetDisplay,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -28,32 +124,40 @@ class CreditCardWidget extends StatelessWidget {
     required String cardExpiration,
   }) {
     return Card(
-      elevation: 4.0,
+      elevation: 8.0,
       color: color,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         height: 200,
-        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 22),
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 22, top: 22),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.9), color.withOpacity(0.6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             _buildLogosBlock(),
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Text(
-                cardNumber,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 21,
-                ),
+            const Spacer(),
+            Text(
+              cardNumber,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
               ),
             ),
+            const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 _buildDetailsBlock(label: "CARDHOLDER", value: cardHolder),
-                _buildDetailsBlock(label: "VALID THRU", value: cardExpiration),
+                _buildDetailsBlock(label: "TOTAL BUDGET FOR", value: cardExpiration),
               ],
             ),
           ],
@@ -72,13 +176,13 @@ class CreditCardWidget extends StatelessWidget {
     );
   }
 
-  Column _buildDetailsBlock({required String label, value}) {
+  Column _buildDetailsBlock({required String label, required String value}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.grey,
             fontSize: 9,
             fontWeight: FontWeight.bold,
@@ -86,7 +190,7 @@ class CreditCardWidget extends StatelessWidget {
         ),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 15,
             fontWeight: FontWeight.bold,

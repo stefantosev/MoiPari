@@ -48,10 +48,6 @@ class _CategoryPopupState extends State<CategoryPopup> {
             controller: _iconController,
             decoration: const InputDecoration(labelText: "Icon(emoji or text)"),
           ),
-          TextField(
-            controller: _colorController,
-            decoration: const InputDecoration(labelText: "Color (Hex or name)"),
-          ),
         ],
       ),
 
