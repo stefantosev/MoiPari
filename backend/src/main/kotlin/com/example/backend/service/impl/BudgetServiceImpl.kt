@@ -18,7 +18,7 @@ class BudgetServiceImpl(
 
     private val exchangeRates = mapOf(
         "MKD_TO_EUR" to 0.016,
-        "EUR_TO_MKD" to 61.5,
+        "EUR_TO_MKD" to 61.64,
         "MKD_TO_USD" to 0.017,
         "USD_TO_MKD" to 58.5,
     )
