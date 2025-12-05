@@ -8,7 +8,7 @@ import java.time.Month
 
 @Repository
 interface ExpenseRepository : JpaRepository<Expense, Int> {
-    fun findAllByCategoriesId(categoryId: Int): List<Expense>
+    fun findAllExpensesByCategoriesIdAndUserId(categoryId: Int, userId: Int): List<Expense>
     fun findAllExpensesByUserId(userId: Int): List<Expense>
     fun findByIdAndUserId(id: Int, userId: Int): Expense
 }

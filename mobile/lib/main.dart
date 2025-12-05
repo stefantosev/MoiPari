@@ -31,8 +31,11 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
-      title: 'Your App Name',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      title: 'MoiPari',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
       routes: {
         '/': (context) => const MainWrapper(),
         '/main': (context) => const MainWrapper(),

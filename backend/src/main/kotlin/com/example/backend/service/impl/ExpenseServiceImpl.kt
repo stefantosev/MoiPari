@@ -12,14 +12,17 @@ import org.springframework.stereotype.Service
 @Service
 class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository, private val userRepository: UserRepository, private val categoryRepository: CategoryRepository) : ExpenseService {
 
-    override fun createExpense(request: ExpenseRequest): ExpenseResponse {
-        val user = userRepository.findById(request.userId)
+    override fun createExpense(request: ExpenseRequest, userId: Int): ExpenseResponse {
+        val user = userRepository.findById(userId)
             .orElseThrow{
                 Exception("User not found")
             }
+        // todo fix temp for now xdd
+        val categories = categoryRepository.findAllCategoriesByIdAndUserId(request.categoryIds, userId);
 
-        val categories = categoryRepository.findAllById(request.categoryIds)
-
+        if (categories.isEmpty() || (categories.size != request.categoryIds.size)) {
+            throw Exception("Categories are empty or some categories not found or don't belong to user")
+        }
         val expense = Expense(
             amount = request.amount,
             description = request.description,
@@ -34,20 +37,28 @@ class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository, priva
 
     }
 
-    override fun deleteExpense(id: Int) {
-        expenseRepository.deleteById(id)
+    override fun deleteExpense(id: Int, userId: Int) {
+        val expense = expenseRepository.findByIdAndUserId(id, userId)
+
+        expenseRepository.delete(expense)
     }
 
-    override fun updateExpense(id: Int, request: ExpenseRequest): ExpenseResponse {
+    override fun updateExpense(id: Int, request: ExpenseRequest, userId: Int): ExpenseResponse {
         val existingExpense = expenseRepository.findById(id)
             .orElseThrow(){
                 Exception("Expense not found")
             }
-        val user = userRepository.findById(request.userId)
+        val user = userRepository.findById(userId)
             .orElseThrow(){
                 Exception("User not found")
             }
-        val categories = categoryRepository.findAllById(request.categoryIds)
+
+        // todo temp for now fix later...
+        val categories = categoryRepository.findAllCategoriesByIdAndUserId(request.categoryIds, userId);
+
+        if (categories.isEmpty() || (categories.size != request.categoryIds.size)) {
+            throw Exception("Categories are empty or some categories not found or don't belong to user")
+        }
 
 
         val updatedExpense = existingExpense.copy(
@@ -74,8 +85,8 @@ class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository, priva
         return expenseRepository.findAll().map {ExpenseResponse.fromEntity(it)}
     }
 
-    override fun getExpensesByCategoryId(categoryId: Int): List<ExpenseResponse> {
-        return expenseRepository.findAllByCategoriesId(categoryId).map {ExpenseResponse.fromEntity(it)}
+    override fun getExpensesByCategoryId(categoryId: Int, userId: Int): List<ExpenseResponse> {
+        return expenseRepository.findAllExpensesByCategoriesIdAndUserId(categoryId, userId).map {ExpenseResponse.fromEntity(it)}
     }
 
     override fun getExpensesByUserId(userId: Int): List<ExpenseResponse> {
