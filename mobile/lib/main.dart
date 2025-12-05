@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/pages/welcome.dart';
@@ -48,9 +46,7 @@ class MyApp extends ConsumerWidget {
       initialRoute: '/',
 
       onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => const MainWrapper(),
-        );
+        return MaterialPageRoute(builder: (context) => const MainWrapper());
       },
     );
   }

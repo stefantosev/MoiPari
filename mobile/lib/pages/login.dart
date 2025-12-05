@@ -26,7 +26,7 @@ class LoginPage extends ConsumerWidget {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFFFDEE9), Color(0xFFFCC2FF)],
+            colors: [Color(0xFFFFC1CC), Color(0xFFFFA6C9)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

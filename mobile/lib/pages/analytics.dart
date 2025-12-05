@@ -1,10 +1,9 @@
 import 'package:flutter/cupertino.dart';
 
-
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
 
-    //TODO: TOSO -> analizite gospod neka e so nas
+  //TODO: TOSO -> analizite gospod neka e so nas
 
   @override
   State<AnalyticsPage> createState() => _AnalyticsPageState();

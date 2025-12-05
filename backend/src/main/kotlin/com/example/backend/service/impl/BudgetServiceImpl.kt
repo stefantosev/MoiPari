@@ -18,13 +18,13 @@ class BudgetServiceImpl(
 
     private val exchangeRates = mapOf(
         "MKD_TO_EUR" to 0.016,
-        "EUR_TO_MKD" to 61.5,
+        "EUR_TO_MKD" to 61.64,
         "MKD_TO_USD" to 0.017,
         "USD_TO_MKD" to 58.5,
     )
 
-    override fun createBudget(request: BudgetRequest): BudgetResponse {
-        val user = userRepository.findById(request.userId)
+    override fun createBudget(request: BudgetRequest, userId: Int): BudgetResponse {
+        val user = userRepository.findById(userId)
             .orElseThrow { Exception("User not found") }
 
         val newBudget = Budget(
@@ -37,17 +37,19 @@ class BudgetServiceImpl(
         return BudgetResponse.fromEntity(savedBudget)
     }
 
-    override fun deleteBudget(id: Int) {
-        budgetRepository.deleteById(id)
+    override fun deleteBudget(id: Int, userId: Int) {
+        val budget = budgetRepository.findByIdAndUserId(id, userId)
+            ?: throw IllegalArgumentException("Budget not found or you don't have permission")
+        budgetRepository.delete(budget)
     }
 
-    override fun updateBudget(id: Int, request: BudgetRequest): BudgetResponse {
+    override fun updateBudget(id: Int, request: BudgetRequest, userId: Int): BudgetResponse {
         val existingBudget = budgetRepository.findById(id)
             .orElseThrow {
                 Exception("Budget not found")
             }
 
-        val user = userRepository.findById(request.userId)
+        val user = userRepository.findById(userId)
             .orElseThrow {
                 Exception("User not found")
             }

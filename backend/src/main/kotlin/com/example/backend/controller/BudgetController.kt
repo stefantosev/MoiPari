@@ -23,18 +23,29 @@ class BudgetController(
         val token = extractToken(authorizationHeader)
         val userId = jwtTokenUtil.getUserId(token).toInt()
 
-        val createdBudget = budgetService.createBudget(request)
+        val createdBudget = budgetService.createBudget(request, userId)
         return ResponseEntity.ok(createdBudget)
     }
 
     @PutMapping("/update/{id}")
-    fun updateBudget(@PathVariable id: Int, @RequestBody request: BudgetRequest): ResponseEntity<BudgetResponse> {
-        return ResponseEntity.ok(budgetService.updateBudget(id, request))
+    fun updateBudget(@PathVariable id: Int,
+                     @RequestBody request: BudgetRequest,
+                     @RequestHeader("Authorization") authorizationHeader: String
+    ): ResponseEntity<BudgetResponse> {
+        val token = extractToken(authorizationHeader)
+        val userId = jwtTokenUtil.getUserId(token).toInt()
+
+        return ResponseEntity.ok(budgetService.updateBudget(id, request, userId))
     }
 
     @DeleteMapping("/{id}")
-    fun deleteBudget(@PathVariable id: Int): ResponseEntity<Void> {
-        budgetService.deleteBudget(id)
+    fun deleteBudget(@PathVariable id: Int,
+                    @RequestHeader("Authorization") authorizationHeader: String
+    ): ResponseEntity<Void> {
+        val token = extractToken(authorizationHeader)
+        val userId = jwtTokenUtil.getUserId(token).toInt()
+
+        budgetService.deleteBudget(id, userId)
         return ResponseEntity.noContent().build()
     }
 

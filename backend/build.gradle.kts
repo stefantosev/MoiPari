@@ -41,6 +41,7 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
     implementation("io.jsonwebtoken:jjwt:0.13.0")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.security:spring-security-core")
 }
 
 kotlin {
