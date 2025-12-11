@@ -7,7 +7,9 @@ import com.example.backend.repository.BudgetRepository
 import com.example.backend.repository.ExpenseRepository
 import com.example.backend.repository.UserRepository
 import com.example.backend.service.BudgetService
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestTemplate
 
 @Service
 class BudgetServiceImpl(
@@ -16,12 +18,16 @@ class BudgetServiceImpl(
     private val expenseRepository: ExpenseRepository
 ) : BudgetService {
 
-    private val exchangeRates = mapOf(
-        "MKD_TO_EUR" to 0.016,
-        "EUR_TO_MKD" to 61.64,
-        "MKD_TO_USD" to 0.017,
-        "USD_TO_MKD" to 58.5,
-    )
+    @Value("\${api.exchange-rate.key}")
+    private lateinit var apiKey: String
+    private val apiUrl = "https://v6.exchangerate-api.com/v6"
+
+//    private val exchangeRates = mapOf(
+//        "MKD_TO_EUR" to 0.016,
+//        "EUR_TO_MKD" to 61.64,
+//        "MKD_TO_USD" to 0.017,
+//        "USD_TO_MKD" to 58.5,
+//    )
 
     override fun createBudget(request: BudgetRequest, userId: Int): BudgetResponse {
         val user = userRepository.findById(userId)
@@ -31,7 +37,8 @@ class BudgetServiceImpl(
             monthlyLimit = request.monthlyLimit,
             year = request.year,
             month = request.month,
-            user = user
+            user = user,
+            remainingAmount = request.monthlyLimit
         )
         val savedBudget = budgetRepository.save(newBudget)
         return BudgetResponse.fromEntity(savedBudget)
@@ -79,9 +86,17 @@ class BudgetServiceImpl(
     }
 
     override fun convertCurrency(amount: Float, fromCurrency: String, toCurrency: String): Float {
-        val key = "${fromCurrency}_TO_${toCurrency}".uppercase()
-        val rate = exchangeRates[key] ?: throw Exception("Exchange rate not found for $fromCurrency to $toCurrency")
-        return amount * rate.toFloat()
+        val url = "$apiUrl/$apiKey/latest/$fromCurrency"
+        val restTemplate = RestTemplate()
+        val response = restTemplate.getForObject(url, Map::class.java)
+
+        val rates =response?.get("conversion_rates") as? Map<String, Double>
+            ?: throw Exception("Failed to fetch exchange rates")
+        val rate  = rates[toCurrency] ?: throw Exception("Exchange rate not found for $fromCurrency to $toCurrency")
+
+//        val key = "${fromCurrency}_TO_${toCurrency}".uppercase()
+//        val rate = exchangeRates[key] ?: throw Exception("Exchange rate not found for $fromCurrency to $toCurrency")
+        return (amount * rate).toFloat()
     }
 
     override fun getTotalBudget(userId: Int, month: Int, year: Int): Float {

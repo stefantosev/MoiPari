@@ -12,6 +12,7 @@ Budget _$BudgetFromJson(Map<String, dynamic> json) => Budget(
   (json['year'] as num).toInt(),
   (json['monthlyLimit'] as num).toDouble(),
   (json['userId'] as num).toInt(),
+  (json['remainingAmount'] as num).toDouble(),
 );
 
 Map<String, dynamic> _$BudgetToJson(Budget instance) => <String, dynamic>{
@@ -20,4 +21,5 @@ Map<String, dynamic> _$BudgetToJson(Budget instance) => <String, dynamic>{
   'year': instance.year,
   'monthlyLimit': instance.monthlyLimit,
   'userId': instance.userId,
+  'remainingAmount': instance.remainingAmount,
 };

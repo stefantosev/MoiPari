@@ -21,4 +21,7 @@ data class Budget(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     var user: User? = null,
+
+    @Column(name = "remaining_amount", nullable = false)
+    var remainingAmount: Float = 0F
 )

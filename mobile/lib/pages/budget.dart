@@ -230,6 +230,10 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
   }
 
   Widget _buildBudgetCard(Budget budget) {
+    final convertedLimit = _convertAmount(budget.monthlyLimit);
+    final convertedRemaining = _convertAmount(budget.remainingAmount);
+    final convertedUsed = convertedLimit - convertedRemaining;
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -268,6 +272,37 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
               ),
             ),
 
+            const SizedBox(height: 20),
+
+            const Text(
+              "Remaining Money",
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "${convertedRemaining.toStringAsFixed(2)} $_currentCurrency",
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w600,
+                color: Colors.green,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              "Used Amount",
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "${convertedUsed.toStringAsFixed(2)} $_currentCurrency",
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: Colors.redAccent,
+              ),
+            ),
             const SizedBox(height: 20),
 
             Row(
