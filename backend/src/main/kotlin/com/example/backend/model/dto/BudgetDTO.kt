@@ -6,7 +6,8 @@ data class BudgetRequest(
     val monthlyLimit: Float,
     val month: Int,
     val year: Int,
-    val userId: Int
+    val userId: Int,
+    var remainingAmount:  Float = 0F
 )
 
 data class BudgetResponse(
@@ -14,7 +15,8 @@ data class BudgetResponse(
     val monthlyLimit: Float,
     val month: Int,
     val year: Int,
-    val userId: Int
+    val userId: Int,
+    var remainingAmount:  Float = 0F
 ) {
     companion object {
         fun fromEntity(budget: Budget): BudgetResponse {
@@ -23,7 +25,8 @@ data class BudgetResponse(
                 monthlyLimit = budget.monthlyLimit,
                 month = budget.month,
                 year = budget.year,
-                userId = budget.user?.id ?: 0
+                userId = budget.user?.id ?: 0,
+                remainingAmount = budget.remainingAmount
             )
         }
     }

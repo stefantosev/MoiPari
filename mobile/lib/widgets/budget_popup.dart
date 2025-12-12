@@ -113,6 +113,7 @@ class _BudgetPopupState extends ConsumerState<BudgetPopup> {
                   year,
                   limit,
                   widget.budget!.userId,
+                  widget.budget!.remainingAmount
                 );
                 await _service.updateBudget(updatedBudget);
                 Navigator.pop(context, "updated");
@@ -123,6 +124,7 @@ class _BudgetPopupState extends ConsumerState<BudgetPopup> {
                   year,
                   limit,
                   0,
+                  limit,
                 );
                 await _service.createBudget(newBudget);
                 Navigator.pop(context, "created");

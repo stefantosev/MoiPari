@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/models/budget.dart';
 import 'package:mobile/service/budget_service.dart';
 import 'package:mobile/widgets/budget_popup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BudgetPage extends ConsumerStatefulWidget {
   const BudgetPage({super.key});
@@ -15,18 +16,58 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
   final BudgetService _services = BudgetService();
   Future<List<Budget>>? _budgetsFuture;
 
+  Budget? _originalBudget;
   String _currentCurrency = 'MKD';
-  double _conversionRate = 1;
   bool _isConverting = false;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrencyPreference();
     _budgetsFuture = _loadBudget();
   }
 
   Future<List<Budget>> _loadBudget() async {
-    return _services.getBudgetByUserId();
+    final list = await _services.getBudgetByUserId();
+    if(list.isNotEmpty){
+      _originalBudget = list.first;
+    }
+    return list;
+  }
+
+  Future<void> _loadCurrencyPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    _currentCurrency = prefs.getString('currency') ?? 'MKD';
+    setState(() {});
+  }
+
+  Future<void> _saveCurrencyPreference() async {
+    final prefs  = await SharedPreferences.getInstance();
+    await prefs.setString('currency', _currentCurrency);
+
+  }
+
+  Future<void> _changeCurrency(String newCurrency) async {
+    if(_isConverting) return;
+    setState(() => _isConverting = true);
+    try{
+        _currentCurrency = newCurrency;
+        await _saveCurrencyPreference();
+
+    }finally{
+      setState(() {
+        _isConverting = false;
+      });
+    }
+  }
+
+  Future<double> _convert(double mkdAmount) async{
+    if(_currentCurrency == "MKD") return mkdAmount;
+    try{
+      return await _services.convertCurrency(mkdAmount, 'MKD', _currentCurrency);
+    }catch(e){
+      return mkdAmount;
+    }
   }
 
   void _refresh() {
@@ -55,38 +96,6 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
         SnackBar(content: Text("Failed to delete budget: $e")),
       );
     }
-  }
-
-  Future<void> _toggleCurrency() async {
-    if (_isConverting) return;
-
-    setState(() => _isConverting = true);
-
-    try {
-      if (_currentCurrency == "MKD") {
-        final rate = await _services.convertCurrency(1.0, "MKD", "EUR");
-        setState(() {
-          _currentCurrency = 'EUR';
-          _conversionRate = rate;
-          _isConverting = false;
-        });
-      } else {
-        setState(() {
-          _currentCurrency = 'MKD';
-          _conversionRate = 1.0;
-          _isConverting = false;
-        });
-      }
-    } catch (e) {
-      setState(() => _isConverting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Currency conversion failed: $e")),
-      );
-    }
-  }
-
-  double _convertAmount(double amount) {
-    return amount * _conversionRate;
   }
 
   @override
@@ -157,39 +166,16 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
 
                     final budget = data.first;
 
-                    return Column(
-                      children: [
-                        _buildBudgetCard(budget),
-
-                        const SizedBox(height: 20),
-
-                        ElevatedButton.icon(
-                          onPressed:
-                          _isConverting ? null : _toggleCurrency,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurpleAccent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 14),
-                          ),
-                          icon: _isConverting
-                              ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                              : const Icon(Icons.currency_exchange),
-                          label: Text(
-                            'Convert ($_currentCurrency)',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ),
-                      ],
+                    return FutureBuilder(
+                        future: _prepareConvertedBudget(budget),
+                        builder: (context, convertedSnapshot) {
+                          if(!convertedSnapshot.hasData){
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          return _buildBudgetCard(convertedSnapshot.data!);
+                        }
                     );
                   },
                 ),
@@ -198,6 +184,18 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<_ConvertedBudget> _prepareConvertedBudget(Budget b) async {
+    final limit = await _convert(b.monthlyLimit);
+    final remaining = await _convert(b.remainingAmount);
+
+    return _ConvertedBudget(
+      limit: limit,
+      remaining: remaining,
+      used: limit - remaining,
+      budget: b,
     );
   }
 
@@ -229,7 +227,9 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
     );
   }
 
-  Widget _buildBudgetCard(Budget budget) {
+  Widget _buildBudgetCard(_ConvertedBudget cb) {
+    final b = cb.budget;
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -242,30 +242,59 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Budget ${budget.month.toString().padLeft(2, '0')}/${budget.year}",
+                  "Budget ${b.month.toString().padLeft(2, '0')}/${b.year}",
                   style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                      fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const Icon(Icons.calendar_month, color: Colors.grey),
               ],
             ),
+            const SizedBox(height: 20),
+
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.currency_exchange,
+                  color: Colors.deepPurpleAccent),
+              color: Colors.white,
+              onSelected: (value) => _changeCurrency(value),
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'MKD', child: Text("MKD")),
+                PopupMenuItem(value: 'EUR', child: Text("EUR")),
+                PopupMenuItem(value: 'USD', child: Text("USD")),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            const Text("Monthly Limit",
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
+            Text(
+              "${cb.limit.toStringAsFixed(2)} $_currentCurrency",
+              style: const TextStyle(
+                  fontSize: 32, fontWeight: FontWeight.w700),
+            ),
 
             const SizedBox(height: 20),
 
-            const Text(
-              "Monthly Limit",
-              style: TextStyle(color: Colors.grey, fontSize: 13),
-            ),
-            const SizedBox(height: 6),
-
+            const Text("Remaining Money",
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
             Text(
-              "${_convertAmount(budget.monthlyLimit).toStringAsFixed(2)} $_currentCurrency",
+              "${cb.remaining.toStringAsFixed(2)} $_currentCurrency",
               style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-              ),
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.green),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text("Used Amount",
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
+            Text(
+              "${cb.used.toStringAsFixed(2)} $_currentCurrency",
+              style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.redAccent),
             ),
 
             const SizedBox(height: 20),
@@ -274,12 +303,13 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.deepPurpleAccent),
-                  onPressed: () => _openPopup(edit: budget),
+                  icon: const Icon(Icons.edit,
+                      color: Colors.deepPurpleAccent),
+                  onPressed: () => _openPopup(edit: b),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _handleDelete(budget.id),
+                  onPressed: () => _handleDelete(b.id),
                 ),
               ],
             )
@@ -288,4 +318,18 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
       ),
     );
   }
+}
+
+class _ConvertedBudget {
+  final double limit;
+  final double remaining;
+  final double used;
+  final Budget budget;
+
+  _ConvertedBudget({
+    required this.limit,
+    required this.remaining,
+    required this.used,
+    required this.budget,
+  });
 }

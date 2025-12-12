@@ -161,8 +161,8 @@ class BudgetService {
      try{
        final uri = Uri.parse("$baseUrl/convert-currency").replace(queryParameters: {
          "amount": amount.toString(),
-         "fromCurrency": fromCurrency.toString(),
-         "toCurrency": toCurrency.toString(),
+         "fromCurrency": fromCurrency,
+         "toCurrency": toCurrency,
        });
 
        final response = await http.get(uri);

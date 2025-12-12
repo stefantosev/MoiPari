@@ -3,6 +3,7 @@ package com.example.backend.service.impl
 import com.example.backend.model.Expense
 import com.example.backend.model.dto.ExpenseRequest
 import com.example.backend.model.dto.ExpenseResponse
+import com.example.backend.repository.BudgetRepository
 import com.example.backend.repository.CategoryRepository
 import com.example.backend.repository.ExpenseRepository
 import com.example.backend.repository.UserRepository
@@ -10,7 +11,12 @@ import com.example.backend.service.ExpenseService
 import org.springframework.stereotype.Service
 
 @Service
-class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository, private val userRepository: UserRepository, private val categoryRepository: CategoryRepository) : ExpenseService {
+class ExpenseServiceImpl(
+    private val expenseRepository: ExpenseRepository,
+    private val userRepository: UserRepository,
+    private val categoryRepository: CategoryRepository,
+    private val budgetRepository: BudgetRepository
+) : ExpenseService {
 
     override fun createExpense(request: ExpenseRequest, userId: Int): ExpenseResponse {
         val user = userRepository.findById(userId)
@@ -33,6 +39,21 @@ class ExpenseServiceImpl(private val expenseRepository: ExpenseRepository, priva
         )
 
         val savedExpense = expenseRepository.save(expense)
+
+        //Method to update the budget remaining amount after creating an expense
+        val month = request.date.monthValue
+        val year = request.date.year
+
+        val budgets = budgetRepository.findByUserIdAndMonthAndYear(userId, month, year)
+            ?: throw Exception("No budget set for this month and year")
+
+        budgets.forEach { budget ->
+            budget.remainingAmount -= request.amount
+            if(budget.remainingAmount < 0){
+                budget.remainingAmount = 0f
+            }
+            budgetRepository.save(budget)
+        }
         return ExpenseResponse.fromEntity(savedExpense)
 
     }
