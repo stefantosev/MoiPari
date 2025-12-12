@@ -15,19 +15,11 @@ import org.springframework.web.client.RestTemplate
 class BudgetServiceImpl(
     private val budgetRepository: BudgetRepository,
     private val userRepository: UserRepository,
-    private val expenseRepository: ExpenseRepository
 ) : BudgetService {
 
     @Value("\${api.exchange-rate.key}")
     private lateinit var apiKey: String
     private val apiUrl = "https://v6.exchangerate-api.com/v6"
-
-//    private val exchangeRates = mapOf(
-//        "MKD_TO_EUR" to 0.016,
-//        "EUR_TO_MKD" to 61.64,
-//        "MKD_TO_USD" to 0.017,
-//        "USD_TO_MKD" to 58.5,
-//    )
 
     override fun createBudget(request: BudgetRequest, userId: Int): BudgetResponse {
         val user = userRepository.findById(userId)
@@ -90,12 +82,10 @@ class BudgetServiceImpl(
         val restTemplate = RestTemplate()
         val response = restTemplate.getForObject(url, Map::class.java)
 
-        val rates =response?.get("conversion_rates") as? Map<String, Double>
+        val rates = response?.get("conversion_rates") as? Map<String, Double>
             ?: throw Exception("Failed to fetch exchange rates")
         val rate  = rates[toCurrency] ?: throw Exception("Exchange rate not found for $fromCurrency to $toCurrency")
 
-//        val key = "${fromCurrency}_TO_${toCurrency}".uppercase()
-//        val rate = exchangeRates[key] ?: throw Exception("Exchange rate not found for $fromCurrency to $toCurrency")
         return (amount * rate).toFloat()
     }
 
@@ -104,14 +94,4 @@ class BudgetServiceImpl(
             .sumOf { it.monthlyLimit.toDouble() }
             .toFloat()
     }
-
-//    override fun getRemainingBudget(userId: Int, month: Int, year: Int): Float {
-//        val totalBudget = getTotalBudget(userId, month, year)
-//        val totalExpenses = budg.findByUserIdAndMonthAndYear(userId, month, year)
-//            .sumOf { it.amount.toDouble() }
-//            .toFloat()
-//
-//        return totalBudget - totalExpenses
-//    }
-
 }

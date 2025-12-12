@@ -4,6 +4,7 @@ import 'package:mobile/providers/auth_provider.dart';
 import 'package:mobile/providers/navigation_provider.dart';
 import 'package:mobile/service/auth_service.dart';
 import 'package:mobile/service/budget_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CreditCardWidget extends ConsumerStatefulWidget {
   const CreditCardWidget({super.key});
@@ -17,12 +18,22 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
   double? _totalBudget;
   bool _isLoading = true;
   String? _error;
+  String _currency = "MKD";
 
   @override
   void initState() {
     super.initState();
     _loadTotalBudget();
+    _loadCurrencyPreference();
   }
+
+  Future<void> _loadCurrencyPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currency = prefs.getString("currency") ?? "MKD";
+    });
+  }
+
 
   Future<void> _loadTotalBudget() async {
     if (!AuthService.isLoggedIn) {
@@ -50,8 +61,10 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
         now.year,
       );
 
+      final converted = await _convertToSelectedCurrency(total);
+
       setState(() {
-        _totalBudget = total;
+        _totalBudget = converted;
         _isLoading = false;
         _error = null;
       });
@@ -62,6 +75,19 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
         _isLoading = false;
         _error = e.toString();
       });
+    }
+  }
+
+  Future<double> _convertToSelectedCurrency(double mkdAmount) async{
+    if(_currency == "MKD") return mkdAmount;
+    try{
+      return await _budgetService.convertCurrency(
+          mkdAmount,
+          "MKD",
+          _currency
+      );
+    }catch (e){
+      return mkdAmount;
     }
   }
 
@@ -95,7 +121,7 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
     } else if (_totalBudget == null) {
       budgetDisplay = "No Budget";
     } else {
-      budgetDisplay = _totalBudget!.toStringAsFixed(2);
+      budgetDisplay = "${_totalBudget!.toStringAsFixed(2)} $_currency";
     }
 
     return GestureDetector(
