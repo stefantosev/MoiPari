@@ -22,18 +22,11 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     final categoriesAsync = ref.watch(categoryProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'Expenses',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.deepPurpleAccent,
+        foregroundColor: Colors.white,
+        title: const Text('Expenses'),
         elevation: 1,
-        foregroundColor: Colors.black87,
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_alt_outlined),
@@ -42,14 +35,17 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
         ],
       ),
       body: RefreshIndicator(
+        color: Colors.deepPurpleAccent,
         onRefresh: () async {
           await ref.read(expenseProvider.notifier).loadExpenses();
           await ref.read(categoryProvider.notifier).refreshCategories();
         },
-        color: Colors.deepPurpleAccent,
-        backgroundColor: Colors.white,
         child: Column(
           children: [
+            Container(
+              padding: const EdgeInsets.only(top: 48),
+              decoration: const BoxDecoration(color: Colors.deepPurpleAccent),
+            ),
             _buildSearchFilterBar(categoriesAsync),
             Expanded(
               child: expensesAsync.when(
@@ -70,18 +66,12 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                       const SizedBox(height: 16),
                       Text(
                         'Error loading expenses',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         '$err',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
@@ -96,17 +86,21 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                 ),
                 data: (expenses) {
                   final filteredExpenses = _filterExpenses(expenses);
-                  
+
                   if (filteredExpenses.isEmpty) {
                     return _buildEmptyState();
                   }
 
                   return ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(8),
                     itemCount: filteredExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = filteredExpenses[index];
-                      return _buildExpenseCard(expense, context, categoriesAsync);
+                      return _buildExpenseCard(
+                        expense,
+                        context,
+                        categoriesAsync,
+                      );
                     },
                   );
                 },
@@ -118,91 +112,106 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     );
   }
 
-Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
-  return Container(
-    padding: const EdgeInsets.all(16),
-    color: Colors.white,
-    child: Column(
-      children: [
-        Container(
-          height: 50,
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: TextField(
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
-            decoration: InputDecoration(
-              hintText: 'Search expenses...',
-              hintStyle: const TextStyle(color: Colors.grey),
-              prefixIcon: const Icon(Icons.search, color: Colors.grey),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              filled: true,
-              fillColor: Colors.transparent,
-            ),
+  Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
+    return Transform.translate(
+      offset: const Offset(0, -32),
+      child: Container(
+        padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
           ),
         ),
-        const SizedBox(height: 12),
-        
-        if (_selectedCategoryId != null || _searchQuery.isNotEmpty)
-          Row(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      if (_selectedCategoryId != null)
-                        _buildFilterChip(
-                          label: _getCategoryName(categoriesAsync, _selectedCategoryId!),
-                          onRemove: () {
-                            setState(() {
-                              _selectedCategoryId = null;
-                            });
-                            _loadAllExpenses();
-                          },
-                        ),
-                      if (_searchQuery.isNotEmpty)
-                        _buildFilterChip(
-                          label: 'Search: "$_searchQuery"',
-                          onRemove: () {
-                            setState(() {
-                              _searchQuery = '';
-                            });
-                          },
-                        ),
-                    ],
+
+        child: Column(
+          children: [
+            Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search expenses...',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
                   ),
+                  filled: true,
+                  fillColor: Colors.transparent,
                 ),
               ),
-              if (_selectedCategoryId != null || _searchQuery.isNotEmpty)
-                TextButton(
-                  onPressed: _clearAllFilters,
-                  child: const Text(
-                    'Clear All',
-                    style: TextStyle(
-                      color: Colors.deepPurpleAccent,
-                      fontWeight: FontWeight.w600,
+            ),
+
+            if (_selectedCategoryId != null || _searchQuery.isNotEmpty)
+              Row(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          if (_selectedCategoryId != null)
+                            _buildFilterChip(
+                              label: _getCategoryName(
+                                categoriesAsync,
+                                _selectedCategoryId!,
+                              ),
+                              onRemove: () {
+                                setState(() {
+                                  _selectedCategoryId = null;
+                                });
+                                _loadAllExpenses();
+                              },
+                            ),
+                          if (_searchQuery.isNotEmpty)
+                            _buildFilterChip(
+                              label: 'Search: "$_searchQuery"',
+                              onRemove: () {
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
-      ],
-    ),
-  );
-}
+                  if (_selectedCategoryId != null || _searchQuery.isNotEmpty)
+                    TextButton(
+                      onPressed: _clearAllFilters,
+                      child: const Text(
+                        'Clear All',
+                        style: TextStyle(
+                          color: Colors.deepPurpleAccent,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  Widget _buildFilterChip({required String label, required VoidCallback onRemove}) {
+  Widget _buildFilterChip({
+    required String label,
+    required VoidCallback onRemove,
+  }) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -224,25 +233,25 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(
-              Icons.close,
-              size: 16,
-              color: Colors.deepPurpleAccent,
-            ),
+            child: Icon(Icons.close, size: 16, color: Colors.deepPurpleAccent),
           ),
         ],
       ),
     );
   }
 
-   Category _getExpenseCategory(Expense expense, AsyncValue<List<Category>> categoriesAsync) {
+  Category _getExpenseCategory(
+    Expense expense,
+    AsyncValue<List<Category>> categoriesAsync,
+  ) {
     return categoriesAsync.when(
       data: (categories) {
         if (expense.categoryIds.isNotEmpty) {
           try {
             final category = categories.firstWhere(
               (cat) => cat.id == expense.categoryIds.first,
-              orElse: () => Category(0, 'Uncategorized', 'category', '#9E9E9E', 0, []),
+              orElse: () =>
+                  Category(0, 'Uncategorized', 'category', '#9E9E9E', 0, []),
             );
             return category;
           } catch (e) {
@@ -255,11 +264,14 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
       error: (error, stack) => Category(0, 'Error', 'error', '#F44336', 0, []),
     );
   }
-  
 
- Widget _buildExpenseCard(Expense expense, BuildContext context, AsyncValue<List<Category>> categoriesAsync) {
+  Widget _buildExpenseCard(
+    Expense expense,
+    BuildContext context,
+    AsyncValue<List<Category>> categoriesAsync,
+  ) {
     final category = _getExpenseCategory(expense, categoriesAsync);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -303,7 +315,7 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +342,10 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: category.colorValue.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
@@ -349,7 +364,7 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
                     ],
                   ),
                 ),
-                
+
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -371,7 +386,8 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => AddEditExpensePage(expense: expense),
+                                builder: (context) =>
+                                    AddEditExpensePage(expense: expense),
                               ),
                             );
                           },
@@ -396,7 +412,7 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
     );
   }
 
-   Widget _buildActionButton({
+  Widget _buildActionButton({
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
@@ -409,26 +425,17 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
           color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          icon,
-          size: 16,
-          color: color,
-        ),
+        child: Icon(icon, size: 16, color: color),
       ),
     );
   }
-
 
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.receipt_long_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.receipt_long_outlined, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             _selectedCategoryId != null || _searchQuery.isNotEmpty
@@ -445,10 +452,7 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
             _selectedCategoryId != null || _searchQuery.isNotEmpty
                 ? 'Try changing your filters or search'
                 : 'Tap the + button to add your first expense',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             textAlign: TextAlign.center,
           ),
         ],
@@ -458,7 +462,7 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
 
   void _showFilterDialog() {
     final categoriesAsync = ref.read(categoryProvider);
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -520,17 +524,19 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
                       },
                     ),
                     const Divider(),
-                    ...categories.map((category) => _buildFilterOption(
-                      label: category.name,
-                      isSelected: _selectedCategoryId == category.id,
-                      onTap: () {
-                        setState(() {
-                          _selectedCategoryId = category.id;
-                        });
-                        _loadExpensesByCategory(category.id);
-                        Navigator.pop(context);
-                      },
-                    )),
+                    ...categories.map(
+                      (category) => _buildFilterOption(
+                        label: category.name,
+                        isSelected: _selectedCategoryId == category.id,
+                        onTap: () {
+                          setState(() {
+                            _selectedCategoryId = category.id;
+                          });
+                          _loadExpensesByCategory(category.id);
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -583,7 +589,9 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Expense'),
-        content: Text('Are you sure you want to delete "${expense.description}"?'),
+        content: Text(
+          'Are you sure you want to delete "${expense.description}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -594,9 +602,7 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
               ref.read(expenseProvider.notifier).deleteExpense(expense.id);
               Navigator.pop(context);
             },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
           ),
         ],
@@ -622,18 +628,26 @@ Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
 
   List<Expense> _filterExpenses(List<Expense> expenses) {
     var filtered = expenses;
-    
+
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((expense) =>
-        expense.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        expense.amount.toString().contains(_searchQuery)
-      ).toList();
+      filtered = filtered
+          .where(
+            (expense) =>
+                expense.description.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                expense.amount.toString().contains(_searchQuery),
+          )
+          .toList();
     }
-    
+
     return filtered;
   }
 
-  String _getCategoryName(AsyncValue<List<Category>> categoriesAsync, int categoryId) {
+  String _getCategoryName(
+    AsyncValue<List<Category>> categoriesAsync,
+    int categoryId,
+  ) {
     return categoriesAsync.when(
       data: (categories) {
         final category = categories.firstWhere(
