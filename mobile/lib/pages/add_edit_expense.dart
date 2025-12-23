@@ -207,16 +207,10 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                                         decoration: BoxDecoration(
                                           color: isSelected
                                               ? Colors.deepPurpleAccent
-                                              : Colors.grey[200],
+                                              : category.colorValue,
                                           shape: BoxShape.circle,
                                         ),
-                                        child: Icon(
-                                          _getCategoryIcon(category.name),
-                                          color: isSelected
-                                              ? Colors.white
-                                              : Colors.grey[700],
-                                          size: 20,
-                                        ),
+                                        child: Icon(category.iconData),
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
@@ -273,27 +267,6 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
         },
       ),
     );
-  }
-
-  IconData _getCategoryIcon(String categoryName) {
-    switch (categoryName.toLowerCase()) {
-      case 'food':
-        return Icons.restaurant;
-      case 'transport':
-        return Icons.directions_car;
-      case 'entertainment':
-        return Icons.movie;
-      case 'utilities':
-        return Icons.bolt;
-      case 'shopping':
-        return Icons.shopping_bag;
-      case 'health':
-        return Icons.favorite;
-      case 'travel':
-        return Icons.flight;
-      default:
-        return Icons.category;
-    }
   }
 
   @override
@@ -697,7 +670,6 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                       Navigator.pop(context);
                     },
                   ),
-                  
                 ],
               ),
             ),

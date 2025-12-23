@@ -216,7 +216,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.deepPurpleAccent.withOpacity(0.1),
+        color: Colors.deepPurpleAccent,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -240,28 +240,27 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     );
   }
 
-  Category _getExpenseCategory(
+  List<Category> _getExpenseCategories(
     Expense expense,
     AsyncValue<List<Category>> categoriesAsync,
   ) {
     return categoriesAsync.when(
-      data: (categories) {
+      data: (allCategories) {
         if (expense.categoryIds.isNotEmpty) {
-          try {
-            final category = categories.firstWhere(
-              (cat) => cat.id == expense.categoryIds.first,
-              orElse: () =>
-                  Category(0, 'Uncategorized', 'category', '#9E9E9E', 0, []),
-            );
-            return category;
-          } catch (e) {
-            return Category(0, 'Uncategorized', 'category', '#9E9E9E', 0, []);
+          final selectedCategories = allCategories
+              .where((cat) => expense.categoryIds.contains(cat.id))
+              .toList();
+
+          if (selectedCategories.isNotEmpty) {
+            return selectedCategories;
           }
         }
-        return Category(0, 'Uncategorized', 'category', '#9E9E9E', 0, []);
+        return [Category(0, 'Uncategorized', 'category', '#9E9E9E', 0, [])];
       },
-      loading: () => Category(0, 'Loading...', 'category', '#9E9E9E', 0, []),
-      error: (error, stack) => Category(0, 'Error', 'error', '#F44336', 0, []),
+      loading: () => [Category(0, 'Loading...', 'category', '#9E9E9E', 0, [])],
+      error: (error, stack) => [
+        Category(0, 'Error', 'error', '#F44336', 0, []),
+      ],
     );
   }
 
@@ -270,7 +269,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     BuildContext context,
     AsyncValue<List<Category>> categoriesAsync,
   ) {
-    final category = _getExpenseCategory(expense, categoriesAsync);
+    final categories = _getExpenseCategories(expense, categoriesAsync);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -285,6 +284,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
           ),
         ],
       ),
+
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -305,12 +305,12 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: category.colorValue.withValues(alpha: 0.1),
+                    color: categories.first.colorValue.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    category.iconData,
-                    color: category.colorValue,
+                    categories.first.iconData,
+                    color: categories.first.colorValue,
                     size: 20,
                   ),
                 ),
@@ -341,24 +341,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: category.colorValue.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              category.name,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: category.colorValue,
-                              ),
-                            ),
-                          ),
+                          Expanded(child: _buildCategoryChips(categories)),
                         ],
                       ),
                     ],
@@ -409,6 +392,30 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCategoryChips(List<Category> categories) {
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: categories.map((category) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: category.colorValue.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            category.name,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: category.colorValue,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 

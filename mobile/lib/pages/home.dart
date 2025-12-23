@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/models/category.dart';
-import 'package:mobile/pages/expenses.dart';
 import 'package:mobile/providers/navigation_provider.dart';
-import 'package:mobile/service/expense_service.dart';
 import 'package:mobile/widgets/category_popup.dart';
 
-import '../providers/auth_provider.dart';
 import '../service/category_service.dart';
 import '../widgets/card.dart';
 
@@ -33,38 +30,53 @@ class _CategoryPageState extends ConsumerState<HomePage> {
     });
   }
 
-
-  Future<void> _handleDelete(int categoryId) async{
+  Future<void> _handleDelete(int categoryId) async {
     try {
       await _services.deleteCategory(categoryId);
-      _refreshCategories();
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Category deleted!")),
-      );
-      ref.read(navigationIndexProvider.notifier).state = 0;
-    }catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+
+      if (!mounted) return;
+
+      _onDeleteSuccess();
+    } catch (e) {
+      if (!mounted) return;
+
+      _showError(e.toString());
     }
   }
 
-  Future<void> _handleEdit(Category category) async{
-     final result = await showDialog(
-         context: context,
-         builder: (context) => CategoryPopup(category: category)
-     );
+  void _onDeleteSuccess() {
+    _refreshCategories();
 
-     if (result == "updated"){
-       _refreshCategories();
-       ref.read(navigationIndexProvider.notifier).state = 0;
-     }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Category deleted!")));
+
+    ref.read(navigationIndexProvider.notifier).state = 0;
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _handleEdit(Category category) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => CategoryPopup(category: category),
+    );
+
+    if (!context.mounted) return;
+
+    if (result == true) {
+      _refreshCategories();
+      ref.read(navigationIndexProvider.notifier).state = 0;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final navNotifier = ref.read(navigationIndexProvider.notifier);
-
 
     return Scaffold(
       appBar: AppBar(
@@ -108,29 +120,18 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
-                              onTap: () async{
-                                final auth = ref.read(authStateProvider);
-                                print("=== CATEGORY PAGE DEBUG ===");
-                                print("isAuthenticated: ${auth.isAuthenticated}");
-                                print("isLoading: ${auth.isLoading}");
-                                print("userId: ${auth.userId}");
-                                print("token: ${auth.token}");
-                                print("error: ${auth.error}");
-                                print("===========================");
-                                //TODO: ADD THE FUNCTIONALITY
+                              onTap: () async {
                                 final result = await showDialog(
-                                    context: context,
-                                    builder: (context) => const CategoryPopup(),
+                                  context: context,
+                                  builder: (dialogContext) =>
+                                      const CategoryPopup(),
                                 );
-                                if(result != null){
-                                  setState(() {
-                                    _categoriesFuture = _services.getCategories();
-                                  });
+
+                                if (!context.mounted) return;
+
+                                if (result == true) {
+                                  _refreshCategories();
                                   navNotifier.state = 0;
-                                } else if( result != null ) {
-                                  setState(() {
-                                    _categoriesFuture = _services.getCategories();
-                                  });
                                 }
                               },
                               child: Container(
@@ -142,7 +143,7 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                                   color: Colors.deepPurpleAccent,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: Text(
+                                child: const Text(
                                   "Add",
                                   style: TextStyle(
                                     color: Colors.white,
@@ -155,67 +156,104 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                           const SizedBox(height: 10),
 
                           Expanded(
-                              child: ListView.builder(
-                                itemCount: categories.length,
-                                itemBuilder: (context, index){
-                                  final categoryId = categories[index];
+                            child: ListView.builder(
+                              itemCount: categories.length,
+                              itemBuilder: (context, index) {
+                                final category = categories[index];
 
-                                  return GestureDetector(
-                                    onTap: () {
-                                      ref.read(selectedCategoryIdProvider.notifier).state = categoryId.id.toString();
-                                      navNotifier.state = 2;
-                                    },
-                                    child: Container(
-                                      margin: const EdgeInsets.only(bottom: 12),
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade100,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                              width: 40,
-                                              height: 40,
-                                              // decoration: BoxDecoration(
-                                              //   color: Colors.deepPurpleAccent,
-                                              //   borderRadius: BorderRadius.circular(8),
-                                              // ),
-                                              child: Center(
-                                                child: Text(
-                                                    categories[index].icon,
-                                                    style: const TextStyle(fontSize: 20, color: Colors.white),
-                                                ),
-                                              )
-                                          ),
-
-                                          const SizedBox(width: 16),
-
-                                          Expanded(
-                                            child: Text(
-                                              categories[index].name,
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                              ),
+                                return GestureDetector(
+                                  onTap: () {
+                                    ref
+                                        .read(
+                                          selectedCategoryIdProvider.notifier,
+                                        )
+                                        .state = category.id
+                                        .toString();
+                                    navNotifier.state = 2;
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            color: category.colorValue
+                                                .withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
                                             ),
                                           ),
-                                          IconButton(
-                                              onPressed: () => _handleEdit(categories[index]),
-                                              icon: const Icon(Icons.edit, size: 20, color: Colors.deepPurpleAccent),
+                                          child: Center(
+                                            child: Icon(
+                                              category.iconData,
+                                              color: category.colorValue,
+                                              size: 24,
+                                            ),
                                           ),
-                                          IconButton(
-                                            onPressed: () => _handleDelete(categories[index].id),
-                                            icon: const Icon(Icons.delete, size: 20,color: Colors.red),
-                                            tooltip: 'Delete Category',
-                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
 
-                                        ],
-                                      ),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                category.name,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${category.expenseIds.length} expenses',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        IconButton(
+                                          onPressed: () =>
+                                              _handleEdit(category),
+                                          icon: const Icon(
+                                            Icons.edit,
+                                            size: 20,
+                                            color: Colors.deepPurpleAccent,
+                                          ),
+                                          tooltip: 'Edit Category',
+                                        ),
+
+                                        IconButton(
+                                          onPressed: () =>
+                                              _handleDelete(category.id),
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            size: 20,
+                                            color: Colors.red,
+                                          ),
+                                          tooltip: 'Delete Category',
+                                        ),
+                                      ],
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ],
                       );
@@ -227,12 +265,7 @@ class _CategoryPageState extends ConsumerState<HomePage> {
               ),
             ),
 
-            Column(
-              children: [
-                const SizedBox(height: 1),
-                CreditCardWidget(),
-              ],
-            ),
+            Column(children: [const SizedBox(height: 1), CreditCardWidget()]),
           ],
         ),
       ),
