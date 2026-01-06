@@ -61,14 +61,14 @@ class _CategoryPageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _handleEdit(Category category) async {
-    final result = await showDialog<bool>(
+    final result = await showDialog<String>(
       context: context,
       builder: (dialogContext) => CategoryPopup(category: category),
     );
 
     if (!context.mounted) return;
 
-    if (result == true) {
+    if (result == "updated") {
       _refreshCategories();
       ref.read(navigationIndexProvider.notifier).state = 0;
     }
@@ -121,7 +121,7 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
                               onTap: () async {
-                                final result = await showDialog(
+                                final result = await showDialog<String>(
                                   context: context,
                                   builder: (dialogContext) =>
                                       const CategoryPopup(),
@@ -129,7 +129,7 @@ class _CategoryPageState extends ConsumerState<HomePage> {
 
                                 if (!context.mounted) return;
 
-                                if (result == true) {
+                                if (result == "created" || result == "updated") {
                                   _refreshCategories();
                                   navNotifier.state = 0;
                                 }
