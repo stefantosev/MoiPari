@@ -4,28 +4,6 @@ import 'package:mobile/service/category_service.dart';
 import 'package:mobile/utils/color_utils.dart';
 import 'package:mobile/utils/icon_utils.dart';
 
-final List<IconData> commonIcons = [
-  Icons.shopping_cart,
-  Icons.restaurant,
-  Icons.directions_car,
-  Icons.movie,
-  Icons.fitness_center,
-  Icons.home,
-  Icons.work,
-  Icons.flight,
-  Icons.local_gas_station,
-  Icons.school,
-  Icons.phone,
-  Icons.wifi,
-  Icons.lightbulb,
-  Icons.attach_money,
-  Icons.savings,
-  Icons.card_giftcard,
-  Icons.pets,
-  Icons.music_note,
-  Icons.local_hospital,
-  Icons.category,
-];
 
 class CategoryPopup extends StatefulWidget {
   final Category? category;
@@ -75,25 +53,25 @@ class _CategoryPopupState extends State<CategoryPopup> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
-            itemCount: commonIcons.length,
+            itemCount: IconUtils.commonIcons.length,
             itemBuilder: (context, index) {
               return GestureDetector(
                 onTap: () {
                   setState(() {
-                    _selectedIcon = commonIcons[index];
+                    _selectedIcon = IconUtils.commonIcons[index];
                   });
                   Navigator.pop(context);
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: _selectedIcon == commonIcons[index]
+                    color: _selectedIcon == IconUtils.commonIcons[index]
                         ? _selectedColor.withValues(alpha: 0.3)
                         : Colors.grey[100],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    commonIcons[index],
-                    color: _selectedIcon == commonIcons[index]
+                    IconUtils.commonIcons[index],
+                    color: _selectedIcon == IconUtils.commonIcons[index]
                         ? _selectedColor
                         : Colors.grey[600],
                     size: 24,

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface BudgetRepository : JpaRepository<Budget, Int> {
-    fun findByUserIdAndMonthAndYear(userId: Int, month : Int, year :Int) : List<Budget>
+    fun findByUserIdAndMonthAndYear(userId: Int, month : Int, year :Int) : Budget?
     fun findByIdAndUserId(id: Int, userId: Int): Budget?
     fun findByUserId(userId: Int) : List<Budget>
 }
