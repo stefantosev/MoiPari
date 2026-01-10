@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/providers/auth_provider.dart';
 import 'package:mobile/service/budget_service.dart';
 
+import '../service/budget_service_2.dart';
+
 final totalBudgetProvider = FutureProvider.autoDispose<double?>((ref) async{
     final authState = ref.watch(authStateProvider);
     final budgetService = BudgetService();
@@ -18,8 +20,6 @@ final totalBudgetProvider = FutureProvider.autoDispose<double?>((ref) async{
     final currentYear = now.year;
 
     try{
-      final total = await budgetService.getTotalBudget(userIdInt, currentMonth, currentYear,);
-      return total;
     } catch (e){
       debugPrint("Error fetching total budget: $e");
       return null;

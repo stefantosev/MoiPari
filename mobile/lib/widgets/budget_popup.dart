@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/service/budget_service.dart';
 import '../models/budget.dart';
+import '../service/budget_service_2.dart';
 
 class BudgetPopup extends ConsumerStatefulWidget {
   final Budget? budget;
@@ -16,7 +17,7 @@ class BudgetPopup extends ConsumerStatefulWidget {
 }
 
 class _BudgetPopupState extends ConsumerState<BudgetPopup> {
-  final _limitController = TextEditingController();
+  final _amountController = TextEditingController();
   final _monthController = TextEditingController();
   final _yearController = TextEditingController();
 
@@ -27,12 +28,10 @@ class _BudgetPopupState extends ConsumerState<BudgetPopup> {
     super.initState();
 
     if (widget.budget != null) {
-      // Editing
-      _limitController.text = widget.budget!.monthlyLimit.toString();
+      _amountController.text = widget.budget!.monthlyLimit.toString();
       _monthController.text = widget.budget!.month.toString();
       _yearController.text = widget.budget!.year.toString();
     } else {
-      // Creating
       final now = DateTime.now();
       _monthController.text = now.month.toString();
       _yearController.text = now.year.toString();
@@ -41,7 +40,7 @@ class _BudgetPopupState extends ConsumerState<BudgetPopup> {
 
   @override
   void dispose() {
-    _limitController.dispose();
+    _amountController.dispose();
     _monthController.dispose();
     _yearController.dispose();
     super.dispose();
@@ -57,12 +56,15 @@ class _BudgetPopupState extends ConsumerState<BudgetPopup> {
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
-            controller: _limitController,
-            keyboardType: TextInputType.number,
+            controller: _amountController,
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
-              labelText: "Monthly Limit",
+              labelText: "Budget Amount",
+              hintText: "Enter amount",
+              prefixText: "\$",
             ),
           ),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -71,17 +73,19 @@ class _BudgetPopupState extends ConsumerState<BudgetPopup> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: "Month",
+                    hintText: "1-12",
                   ),
                   readOnly: isEditing,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 16),
               Expanded(
                 child: TextField(
                   controller: _yearController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: "Year",
+                    hintText: "e.g., 2024",
                   ),
                   readOnly: isEditing,
                 ),
@@ -95,49 +99,61 @@ class _BudgetPopupState extends ConsumerState<BudgetPopup> {
           onPressed: () => Navigator.pop(context),
           child: const Text("Cancel"),
         ),
-        TextButton(
-          onPressed: () async {
-            try {
-              final double limit = double.tryParse(_limitController.text.trim()) ?? 0;
-              final int month = int.tryParse(_monthController.text.trim()) ?? 0;
-              final int year = int.tryParse(_yearController.text.trim()) ?? 0;
-
-              if (limit <= 0 || month < 1 || month > 12 || year < 2000) {
-                throw Exception("Invalid input");
-              }
-
-              if (isEditing) {
-                final updatedBudget = Budget(
-                  widget.budget!.id,
-                  month,
-                  year,
-                  limit,
-                  widget.budget!.userId,
-                );
-                await _service.updateBudget(updatedBudget);
-                Navigator.pop(context, "updated");
-              } else {
-                final newBudget = Budget(
-                  0,
-                  month,
-                  year,
-                  limit,
-                  0,
-                );
-                await _service.createBudget(newBudget);
-                Navigator.pop(context, "created");
-              }
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Error: $e")),
-                );
-              }
-            }
-          },
+        ElevatedButton(
+          onPressed: _submitBudget,
           child: Text(isEditing ? "Save" : "Create"),
         ),
       ],
     );
+  }
+
+  Future<void> _submitBudget() async {
+    try {
+      final double amount = double.tryParse(_amountController.text.trim()) ?? 0;
+      final int month = int.tryParse(_monthController.text.trim()) ?? 0;
+      final int year = int.tryParse(_yearController.text.trim()) ?? 0;
+
+      if (amount <= 0) {
+        throw Exception("Amount must be greater than 0");
+      }
+      if (month < 1 || month > 12) {
+        throw Exception("Month must be between 1 and 12");
+      }
+      if (year < 2000 || year > 2100) {
+        throw Exception("Year must be between 2000 and 2100");
+      }
+
+      if (widget.budget != null) {
+        await _service.updateBudget(
+          id: widget.budget!.id,
+          amount: amount,
+          month: month,
+          year: year,
+          currency: "USD",
+        );
+        if (mounted) {
+          Navigator.pop(context, "updated");
+        }
+      } else {
+        await _service.createOrUpdateBudget(
+          amount: amount,
+          month: month,
+          year: year,
+          currency: 'USD',
+        );
+        if (mounted) {
+          Navigator.pop(context, "created");
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: $e"),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 }

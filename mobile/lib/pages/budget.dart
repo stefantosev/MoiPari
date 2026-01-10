@@ -4,6 +4,8 @@ import 'package:mobile/models/budget.dart';
 import 'package:mobile/service/budget_service.dart';
 import 'package:mobile/widgets/budget_popup.dart';
 
+import '../service/budget_service_2.dart';
+
 class BudgetPage extends ConsumerStatefulWidget {
   const BudgetPage({super.key});
 
@@ -12,8 +14,11 @@ class BudgetPage extends ConsumerStatefulWidget {
 }
 
 class _BudgetPageState extends ConsumerState<BudgetPage> {
-  final BudgetService _services = BudgetService();
+  final BudgetService _service = BudgetService();
   Future<List<Budget>>? _budgetsFuture;
+
+  Future<Budget?>? _currentBudgetFuture;
+  bool _showSingleBudget = true;
 
   String _currentCurrency = 'MKD';
   double _conversionRate = 1;
@@ -22,17 +27,22 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
   @override
   void initState() {
     super.initState();
-    _budgetsFuture = _loadBudget();
+    _loadBudgets();
   }
 
-  Future<List<Budget>> _loadBudget() async {
-    return _services.getBudgetByUserId();
+  void _loadBudgets() {
+    setState(() {
+      if (_showSingleBudget) {
+        _currentBudgetFuture = _service.getCurrentBudget();
+        _budgetsFuture = null;
+      } else {
+
+      }
+    });
   }
 
   void _refresh() {
-    setState(() {
-      _budgetsFuture = _loadBudget();
-    });
+    _loadBudgets();
   }
 
   void _openPopup({Budget? edit}) async {
@@ -48,7 +58,7 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
 
   void _handleDelete(int budgetId) async {
     try {
-      await _services.deleteBudget(budgetId);
+      await _service.deleteBudget(budgetId);
       _refresh();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,10 +74,10 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
 
     try {
       if (_currentCurrency == "MKD") {
-        final rate = await _services.convertCurrency(1.0, "MKD", "EUR");
+        // final rate = await _services.convertCurrency(1.0, "MKD", "EUR");
         setState(() {
           _currentCurrency = 'EUR';
-          _conversionRate = rate;
+          // _conversionRate = rate;
           _isConverting = false;
         });
       } else {
@@ -97,24 +107,11 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
         backgroundColor: Colors.deepPurpleAccent,
         foregroundColor: Colors.white,
       ),
-
-      floatingActionButton: FutureBuilder<List<Budget>>(
-        future: _budgetsFuture,
-        builder: (_, snapshot) {
-          final hasBudget =
-              snapshot.hasData && (snapshot.data?.isNotEmpty ?? false);
-
-          if (hasBudget) return const SizedBox.shrink();
-
-          return FloatingActionButton(
-            onPressed: () => _openPopup(),
-            shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.add, size: 30),
-          );
-        },
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openPopup(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: const Icon(Icons.add, size: 30),
       ),
-
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -135,69 +132,109 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
                     topRight: Radius.circular(30),
                   ),
                 ),
-                child: FutureBuilder<List<Budget>>(
-                  future: _budgetsFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                            color: Colors.deepPurpleAccent),
-                      );
-                    }
-
-                    if (snapshot.hasError) {
-                      return _buildError(snapshot.error.toString());
-                    }
-
-                    final data = snapshot.data ?? [];
-
-                    if (data.isEmpty) {
-                      return _buildEmpty();
-                    }
-
-                    final budget = data.first;
-
-                    return Column(
-                      children: [
-                        _buildBudgetCard(budget),
-
-                        const SizedBox(height: 20),
-
-                        ElevatedButton.icon(
-                          onPressed:
-                          _isConverting ? null : _toggleCurrency,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurpleAccent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 14),
-                          ),
-                          icon: _isConverting
-                              ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                              : const Icon(Icons.currency_exchange),
-                          label: Text(
-                            'Convert ($_currentCurrency)',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                child: _showSingleBudget
+                    ? _buildSingleBudgetView()
+                    : _buildMultipleBudgetsView(),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSingleBudgetView() {
+    return FutureBuilder<Budget?>(
+      future: _currentBudgetFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.deepPurpleAccent),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return _buildError(snapshot.error.toString());
+        }
+
+        final budget = snapshot.data;
+
+        if (budget == null) {
+          return _buildEmpty();
+        }
+
+        return Column(
+          children: [
+            _buildBudgetCard(budget),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _isConverting ? null : _toggleCurrency,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurpleAccent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
+              ),
+              icon: _isConverting
+                  ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+                  : const Icon(Icons.currency_exchange),
+              label: Text(
+                'Convert ($_currentCurrency)',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMultipleBudgetsView() {
+    return FutureBuilder<List<Budget>>(
+      future: _budgetsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.deepPurpleAccent),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return _buildError(snapshot.error.toString());
+        }
+
+        final budgets = snapshot.data ?? [];
+
+        if (budgets.isEmpty) {
+          return _buildEmpty();
+        }
+
+        return ListView.builder(
+          itemCount: budgets.length,
+          itemBuilder: (context, index) {
+            final budget = budgets[index];
+            return Column(
+              children: [
+                _buildBudgetCard(budget),
+                if (index < budgets.length - 1)
+                  const SizedBox(height: 16),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -221,10 +258,21 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
 
   Widget _buildEmpty() {
     return const Center(
-      child: Text(
-        "No budget created yet.\nTap + to add one!",
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 18, color: Colors.black54),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.account_balance_wallet_outlined,
+            size: 60,
+            color: Colors.grey,
+          ),
+          SizedBox(height: 16),
+          Text(
+            "No budget created yet.\nTap + to add one!",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 18, color: Colors.black54),
+          ),
+        ],
       ),
     );
   }
@@ -251,15 +299,12 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
                 const Icon(Icons.calendar_month, color: Colors.grey),
               ],
             ),
-
             const SizedBox(height: 20),
-
             const Text(
-              "Monthly Limit",
+              "Monthly Budget",
               style: TextStyle(color: Colors.grey, fontSize: 13),
             ),
             const SizedBox(height: 6),
-
             Text(
               "${_convertAmount(budget.monthlyLimit).toStringAsFixed(2)} $_currentCurrency",
               style: const TextStyle(
@@ -267,25 +312,9 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-
             const SizedBox(height: 20),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.deepPurpleAccent),
-                  onPressed: () => _openPopup(edit: budget),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _handleDelete(budget.id),
-                ),
-              ],
-            )
-          ],
-        ),
-      ),
-    );
+
+    ])));
   }
 }

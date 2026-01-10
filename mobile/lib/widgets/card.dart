@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/providers/auth_provider.dart';
 import 'package:mobile/providers/navigation_provider.dart';
 import 'package:mobile/service/auth_service.dart';
-import 'package:mobile/service/budget_service.dart';
+import '../service/budget_service_2.dart';
 
 class CreditCardWidget extends ConsumerStatefulWidget {
   const CreditCardWidget({super.key});
@@ -44,14 +44,11 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
       }
 
       final now = DateTime.now();
-      final total = await _budgetService.getTotalBudget(
-        int.parse(userId),
-        now.month,
-        now.year,
-      );
+
+      final Map<String, dynamic> budget = await _budgetService.getRemainingBudget(1,2026);
 
       setState(() {
-        _totalBudget = total;
+        _totalBudget = budget['remaining'];
         _isLoading = false;
         _error = null;
       });
@@ -95,7 +92,7 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
     } else if (_totalBudget == null) {
       budgetDisplay = "No Budget";
     } else {
-      budgetDisplay = _totalBudget!.toStringAsFixed(2);
+      budgetDisplay = "MKD ${_totalBudget!.toStringAsFixed(2)}";
     }
 
     return GestureDetector(
@@ -106,7 +103,7 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             _buildCreditCard(
-              color: Color(0xFF090943),
+              color: const Color(0xFF090943),
               cardExpiration: displayMonthYear,
               cardHolder: cardHolderName,
               cardNumber: budgetDisplay,
@@ -133,7 +130,7 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.9), color.withOpacity(0.6)],
+            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
