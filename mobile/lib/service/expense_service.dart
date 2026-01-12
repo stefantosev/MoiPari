@@ -38,8 +38,6 @@ class ExpenseService {
     }
   }
 
-
-
   Future<List<Expense>> getExpensesByUserId(String userId) async {
     try {
       final response = await http.get(Uri.parse("$baseUrl/user/$userId"));
@@ -62,7 +60,6 @@ class ExpenseService {
       throw Exception("Failed to load expenses by userId: $e");
     }
   }
-
 
   Future<Expense> createExpense(ExpenseRequest expenseRequest) async {
     try {
@@ -142,49 +139,52 @@ class ExpenseService {
     }
   }
 
-
-Future<List<Expense>> getExpensesByCategoryId(String categoryId) async {
-  try {
-    if (!AuthService.isLoggedIn) {
-      throw Exception("User not authenticated");
-    }
-    
-    final response = await http.get(
-      Uri.parse("$baseUrl/category/$categoryId"),
-      headers: AuthService.authHeaders,
-    );
-
-    if (response.statusCode == 200) {
-      List<dynamic> jsonList = jsonDecode(response.body);
-      
-      List<Expense> expenses = jsonList
-          .map((jsonItem) => Expense.fromJson(jsonItem))
-          .toList();
-
-      return expenses;
-    } else {
-      throw Exception(
-        "Failed to load expenses by category (Status code: ${response.statusCode})",
-      );
-    }
-  } catch (e) {
-    debugPrint("Error fetching expenses by category: $e");
-    throw Exception("Failed to load expenses by category: $e");
-  }
-}
-
-  Future<double> getTotalSpentBetween(DateTime startDate, DateTime endDate) async {
+  Future<List<Expense>> getExpensesByCategoryId(String categoryId) async {
     try {
       if (!AuthService.isLoggedIn) {
         throw Exception("User not authenticated");
       }
 
       final response = await http.get(
-        Uri.parse("$baseUrl/analytics/total-spent")
-            .replace(queryParameters: {
-          'startDate': startDate.toIso8601String(),
-          'endDate': endDate.toIso8601String(),
-        }),
+        Uri.parse("$baseUrl/category/$categoryId"),
+        headers: AuthService.authHeaders,
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+
+        List<Expense> expenses = jsonList
+            .map((jsonItem) => Expense.fromJson(jsonItem))
+            .toList();
+
+        return expenses;
+      } else {
+        throw Exception(
+          "Failed to load expenses by category (Status code: ${response.statusCode})",
+        );
+      }
+    } catch (e) {
+      debugPrint("Error fetching expenses by category: $e");
+      throw Exception("Failed to load expenses by category: $e");
+    }
+  }
+
+  Future<double> getTotalSpentBetween(
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    try {
+      if (!AuthService.isLoggedIn) {
+        throw Exception("User not authenticated");
+      }
+
+      final response = await http.get(
+        Uri.parse("$baseUrl/analytics/total-spent").replace(
+          queryParameters: {
+            'startDate': startDate.toIso8601String(),
+            'endDate': endDate.toIso8601String(),
+          },
+        ),
         headers: AuthService.authHeaders,
       );
 
@@ -203,18 +203,21 @@ Future<List<Expense>> getExpensesByCategoryId(String categoryId) async {
   }
 
   Future<Map<String, List<Expense>>> getExpensesByCategoryForPeriod(
-      DateTime startDate, DateTime endDate) async {
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
     try {
       if (!AuthService.isLoggedIn) {
         throw Exception("User not authenticated");
       }
 
       final response = await http.get(
-        Uri.parse("$baseUrl/filter/date-range")
-            .replace(queryParameters: {
-          'startDate': startDate.toIso8601String(),
-          'endDate': endDate.toIso8601String(),
-        }),
+        Uri.parse("$baseUrl/filter/date-range").replace(
+          queryParameters: {
+            'startDate': startDate.toIso8601String(),
+            'endDate': endDate.toIso8601String(),
+          },
+        ),
         headers: AuthService.authHeaders,
       );
 
@@ -252,6 +255,7 @@ Future<List<Expense>> getExpensesByCategoryId(String categoryId) async {
       }
 
       final Map<String, double> monthlyData = {};
+      final List<Future<void>> futures = [];
 
       for (int month = 1; month <= 12; month++) {
         final startDate = DateTime(year, month, 1);
@@ -259,14 +263,18 @@ Future<List<Expense>> getExpensesByCategoryId(String categoryId) async {
             ? DateTime(year, month + 1, 1).subtract(const Duration(days: 1))
             : DateTime(year + 1, 1, 1).subtract(const Duration(days: 1));
 
-        try {
-          final total = await getTotalSpentBetween(startDate, endDate);
-          monthlyData[DateTime(year, month).toString()] = total;
-        } catch (e) {
-          monthlyData[DateTime(year, month).toString()] = 0.0;
-        }
+        futures.add(
+          getTotalSpentBetween(startDate, endDate)
+              .then((total) {
+                monthlyData[DateTime(year, month).toString()] = total;
+              })
+              .catchError((e) {
+                monthlyData[DateTime(year, month).toString()] = 0.0;
+              }),
+        );
       }
 
+      await Future.wait(futures);
       return monthlyData;
     } catch (e) {
       debugPrint("Error fetching monthly spending: $e");
@@ -274,18 +282,22 @@ Future<List<Expense>> getExpensesByCategoryId(String categoryId) async {
     }
   }
 
-  Future<Map<String, double>> getPaymentMethodBreakdown(DateTime startDate, DateTime endDate) async {
+  Future<Map<String, double>> getPaymentMethodBreakdown(
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
     try {
       if (!AuthService.isLoggedIn) {
         throw Exception("User not authenticated");
       }
 
       final response = await http.get(
-        Uri.parse("$baseUrl/filter/date-range")
-            .replace(queryParameters: {
-          'startDate': startDate.toIso8601String(),
-          'endDate': endDate.toIso8601String(),
-        }),
+        Uri.parse("$baseUrl/filter/date-range").replace(
+          queryParameters: {
+            'startDate': startDate.toIso8601String(),
+            'endDate': endDate.toIso8601String(),
+          },
+        ),
         headers: AuthService.authHeaders,
       );
 
@@ -300,7 +312,7 @@ Future<List<Expense>> getExpensesByCategoryId(String categoryId) async {
           String method = expense.paymentMethod ?? 'Unknown';
           paymentMethodTotals.update(
             method,
-                (value) => value + expense.amount,
+            (value) => value + expense.amount,
             ifAbsent: () => expense.amount,
           );
         }
@@ -317,4 +329,36 @@ Future<List<Expense>> getExpensesByCategoryId(String categoryId) async {
     }
   }
 
+  Future<List<Expense>> getExpensesForPeriod(
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    try {
+      if (!AuthService.isLoggedIn) {
+        throw Exception("User not authenticated");
+      }
+
+      final response = await http.get(
+        Uri.parse("$baseUrl/filter/date-range").replace(
+          queryParameters: {
+            'startDate': startDate.toIso8601String(),
+            'endDate': endDate.toIso8601String(),
+          },
+        ),
+        headers: AuthService.authHeaders,
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.map((jsonItem) => Expense.fromJson(jsonItem)).toList();
+      } else {
+        throw Exception(
+          "Failed to get expenses by date range (Status code: ${response.statusCode})",
+        );
+      }
+    } catch (e) {
+      debugPrint("Error fetching expenses by date range: $e");
+      throw Exception("Failed to load expenses by date range: $e");
+    }
+  }
 }
