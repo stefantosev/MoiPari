@@ -15,6 +15,13 @@ class ExpensePage extends ConsumerStatefulWidget {
 class _ExpensePageState extends ConsumerState<ExpensePage> {
   int? _selectedCategoryId;
   String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +29,12 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     final categoriesAsync = ref.watch(categoryProvider);
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.deepPurpleAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: const Text('Expenses'),
-        elevation: 1,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_alt_outlined),
@@ -35,7 +43,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
         ],
       ),
       body: RefreshIndicator(
-        color: Colors.deepPurpleAccent,
+        color: Theme.of(context).colorScheme.primary,
         onRefresh: () async {
           await ref.read(expenseProvider.notifier).loadExpenses();
           await ref.read(categoryProvider.notifier).refreshCategories();
@@ -43,15 +51,20 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.only(top: 48),
-              decoration: const BoxDecoration(color: Colors.deepPurpleAccent),
+              height: 60,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             _buildSearchFilterBar(categoriesAsync),
             Expanded(
               child: expensesAsync.when(
-                loading: () => const Center(
+                loading: () => Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation(Colors.deepPurpleAccent),
+                    valueColor: AlwaysStoppedAnimation(
+                      Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ),
                 error: (err, stack) => Center(
@@ -61,17 +74,23 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                       Icon(
                         Icons.error_outline,
                         size: 64,
-                        color: Colors.grey[400],
+                        color: Theme.of(context).colorScheme.secondary,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Error loading expenses',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         '$err',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
@@ -86,7 +105,6 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                 ),
                 data: (expenses) {
                   final filteredExpenses = _filterExpenses(expenses);
-
                   if (filteredExpenses.isEmpty) {
                     return _buildEmptyState();
                   }
@@ -114,11 +132,11 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
 
   Widget _buildSearchFilterBar(AsyncValue<List<Category>> categoriesAsync) {
     return Transform.translate(
-      offset: const Offset(0, -32),
+      offset: const Offset(0, -30),
       child: Container(
         padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
@@ -130,11 +148,20 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
             Container(
               height: 50,
               decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!),
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(30),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .25),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
               ),
               child: TextField(
+                controller: _searchController,
                 onChanged: (value) {
                   setState(() {
                     _searchQuery = value;
@@ -142,8 +169,13 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                 },
                 decoration: InputDecoration(
                   hintText: 'Search expenses...',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  hintStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -173,7 +205,6 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                                 setState(() {
                                   _selectedCategoryId = null;
                                 });
-                                _loadAllExpenses();
                               },
                             ),
                           if (_searchQuery.isNotEmpty)
@@ -182,6 +213,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                               onRemove: () {
                                 setState(() {
                                   _searchQuery = '';
+                                  _searchController.clear();
                                 });
                               },
                             ),
@@ -192,10 +224,10 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                   if (_selectedCategoryId != null || _searchQuery.isNotEmpty)
                     TextButton(
                       onPressed: _clearAllFilters,
-                      child: const Text(
+                      child: Text(
                         'Clear All',
                         style: TextStyle(
-                          color: Colors.deepPurpleAccent,
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -216,7 +248,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.deepPurpleAccent,
+        color: Theme.of(context).colorScheme.secondary,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -224,16 +256,20 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.deepPurpleAccent,
+              color: Theme.of(context).colorScheme.secondary,
             ),
           ),
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(Icons.close, size: 16, color: Colors.deepPurpleAccent),
+            child: Icon(
+              Icons.close,
+              size: 16,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
           ),
         ],
       ),
@@ -274,7 +310,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -322,10 +358,12 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                     children: [
                       Text(
                         expense.description,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -337,7 +375,9 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                             _formatDate(expense.date),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -364,7 +404,9 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                       children: [
                         _buildActionButton(
                           icon: Icons.edit_outlined,
-                          color: Colors.blue,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -378,7 +420,9 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                         const SizedBox(width: 8),
                         _buildActionButton(
                           icon: Icons.delete_outline,
-                          color: Colors.red,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
                           onTap: () {
                             _showDeleteDialog(expense);
                           },
@@ -442,7 +486,11 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined, size: 80, color: Colors.grey[400]),
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 80,
+            color: Theme.of(context).colorScheme.secondary,
+          ),
           const SizedBox(height: 16),
           Text(
             _selectedCategoryId != null || _searchQuery.isNotEmpty
@@ -451,7 +499,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
             ),
           ),
           const SizedBox(height: 8),
@@ -459,7 +507,10 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
             _selectedCategoryId != null || _searchQuery.isNotEmpty
                 ? 'Try changing your filters or search'
                 : 'Tap the + button to add your first expense',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -473,11 +524,11 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.6,
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(25),
             topRight: Radius.circular(25),
@@ -488,7 +539,7 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: Theme.of(context).colorScheme.secondary,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(25),
                   topRight: Radius.circular(25),
@@ -497,16 +548,19 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Filter Expenses',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSecondary,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.grey),
+                    icon: Icon(
+                      Icons.close,
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -526,7 +580,6 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                         setState(() {
                           _selectedCategoryId = null;
                         });
-                        _loadAllExpenses();
                         Navigator.pop(context);
                       },
                     ),
@@ -539,7 +592,6 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                           setState(() {
                             _selectedCategoryId = category.id;
                           });
-                          _loadExpensesByCategory(category.id);
                           Navigator.pop(context);
                         },
                       ),
@@ -567,16 +619,18 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected ? Colors.deepPurpleAccent : Colors.grey[400]!,
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.secondary,
             width: 2,
           ),
         ),
         child: isSelected
             ? Container(
                 margin: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.deepPurpleAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               )
             : null,
@@ -585,7 +639,9 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
         label,
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          color: isSelected ? Colors.deepPurpleAccent : Colors.black87,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.secondary,
         ),
       ),
     );
@@ -617,38 +673,29 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
     );
   }
 
-  void _loadAllExpenses() {
-    ref.read(expenseProvider.notifier).loadExpenses();
-  }
-
-  void _loadExpensesByCategory(int categoryId) {
-    ref.read(expenseProvider.notifier).loadExpensesByCategory(categoryId);
-  }
-
   void _clearAllFilters() {
     setState(() {
       _selectedCategoryId = null;
       _searchQuery = '';
+      _searchController.clear();
     });
-    _loadAllExpenses();
   }
 
   List<Expense> _filterExpenses(List<Expense> expenses) {
-    var filtered = expenses;
+    return expenses.where((expense) {
+      final matchesSearch =
+          _searchQuery.isEmpty ||
+          expense.description.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          expense.amount.toString().contains(_searchQuery);
 
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered
-          .where(
-            (expense) =>
-                expense.description.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ) ||
-                expense.amount.toString().contains(_searchQuery),
-          )
-          .toList();
-    }
+      final matchesCategory =
+          _selectedCategoryId == null ||
+          expense.categoryIds.contains(_selectedCategoryId);
 
-    return filtered;
+      return matchesSearch && matchesCategory;
+    }).toList();
   }
 
   String _getCategoryName(

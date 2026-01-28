@@ -6,9 +6,10 @@ import 'package:mobile/models/category.dart';
 import '../models/expense.dart';
 import '../service/expense_service.dart';
 
-final categoryProvider = StateNotifierProvider<CategoryNotifier, AsyncValue<List<Category>>>((ref) {
-  return CategoryNotifier();
-});
+final categoryProvider =
+    StateNotifierProvider<CategoryNotifier, AsyncValue<List<Category>>>((ref) {
+      return CategoryNotifier();
+    });
 
 class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
   final CategoryService _categoryService = CategoryService();
@@ -32,13 +33,14 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
   }
 }
 
-final expenseProvider = StateNotifierProvider<ExpenseNotifier, AsyncValue<List<Expense>>>((ref) {
-  return ExpenseNotifier();
-});
+final expenseProvider =
+    StateNotifierProvider<ExpenseNotifier, AsyncValue<List<Expense>>>((ref) {
+      return ExpenseNotifier();
+    });
 
 class ExpenseNotifier extends StateNotifier<AsyncValue<List<Expense>>> {
   final ExpenseService _expenseService = ExpenseService();
-  List<Expense> _allExpenses = []; 
+  List<Expense> _allExpenses = [];
 
   ExpenseNotifier() : super(const AsyncValue.loading()) {
     loadExpenses();
@@ -48,32 +50,10 @@ class ExpenseNotifier extends StateNotifier<AsyncValue<List<Expense>>> {
     state = const AsyncValue.loading();
     try {
       final expenses = await _expenseService.getExpenses();
-      _allExpenses = expenses; 
+      _allExpenses = expenses;
       state = AsyncValue.data(expenses);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
-    }
-  }
-
-  Future<void> loadExpensesByCategory(int categoryId) async {
-    state = const AsyncValue.loading();
-    try {
-      final expenses = await _expenseService.getExpensesByCategoryId(categoryId.toString());
-      state = AsyncValue.data(expenses);
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
-    }
-  }
-
-  void filterExpenses(String query) {
-    if (query.isEmpty) {
-      state = AsyncValue.data(_allExpenses);
-    } else {
-      final filtered = _allExpenses.where((expense) =>
-        expense.description.toLowerCase().contains(query.toLowerCase()) ||
-        expense.amount.toString().contains(query)
-      ).toList();
-      state = AsyncValue.data(filtered);
     }
   }
 
@@ -91,10 +71,13 @@ class ExpenseNotifier extends StateNotifier<AsyncValue<List<Expense>>> {
     }
   }
 
-  Future<void> updateExpense(int expenseId, ExpenseRequest expenseRequest) async {
+  Future<void> updateExpense(
+    int expenseId,
+    ExpenseRequest expenseRequest,
+  ) async {
     try {
       await _expenseService.updateExpense(expenseId, expenseRequest);
-      await loadExpenses(); 
+      await loadExpenses();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
       rethrow;
@@ -104,7 +87,7 @@ class ExpenseNotifier extends StateNotifier<AsyncValue<List<Expense>>> {
   Future<void> deleteExpense(int expenseId) async {
     try {
       await _expenseService.deleteExpense(expenseId);
-      await loadExpenses(); 
+      await loadExpenses();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
       rethrow;

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/models/budget.dart';
-import 'package:mobile/service/budget_service.dart';
 import 'package:mobile/widgets/budget_popup.dart';
 
 import '../service/budget_service_2.dart';
@@ -18,7 +17,8 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
   Future<List<Budget>>? _budgetsFuture;
 
   Future<Budget?>? _currentBudgetFuture;
-  bool _showSingleBudget = true;
+  final bool _showSingleBudget =
+      true; 
 
   String _currentCurrency = 'MKD';
   double _conversionRate = 1;
@@ -36,7 +36,6 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
         _currentBudgetFuture = _service.getCurrentBudget();
         _budgetsFuture = null;
       } else {
-
       }
     });
   }
@@ -61,8 +60,12 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
       await _service.deleteBudget(budgetId);
       _refresh();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to delete budget: $e")),
+        SnackBar(
+          content: Text("Failed to delete budget: $e"),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     }
   }
@@ -74,10 +77,9 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
 
     try {
       if (_currentCurrency == "MKD") {
-        // final rate = await _services.convertCurrency(1.0, "MKD", "EUR");
         setState(() {
           _currentCurrency = 'EUR';
-          // _conversionRate = rate;
+          _conversionRate = 0.016; 
           _isConverting = false;
         });
       } else {
@@ -89,9 +91,10 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
       }
     } catch (e) {
       setState(() => _isConverting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Currency conversion failed: $e")),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Currency conversion failed: $e")));
     }
   }
 
@@ -101,21 +104,26 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Budget'),
-        backgroundColor: Colors.deepPurpleAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openPopup(),
+        backgroundColor: colorScheme.secondaryContainer,
+        foregroundColor: colorScheme.onSecondaryContainer,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: const Icon(Icons.add, size: 30),
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        color: Colors.deepPurpleAccent,
+        color: colorScheme.primary,
         child: Stack(
           children: [
             Positioned(
@@ -125,9 +133,9 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
               bottom: 0,
               child: Container(
                 padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(30),
                     topRight: Radius.circular(30),
                   ),
@@ -148,9 +156,7 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
       future: _currentBudgetFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.deepPurpleAccent),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -163,6 +169,9 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
           return _buildEmpty();
         }
 
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
         return Column(
           children: [
             _buildBudgetCard(budget),
@@ -170,8 +179,8 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
             ElevatedButton.icon(
               onPressed: _isConverting ? null : _toggleCurrency,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurpleAccent,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -181,14 +190,14 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
                 ),
               ),
               icon: _isConverting
-                  ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colorScheme.onPrimary,
+                      ),
+                    )
                   : const Icon(Icons.currency_exchange),
               label: Text(
                 'Convert ($_currentCurrency)',
@@ -206,9 +215,7 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
       future: _budgetsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.deepPurpleAccent),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -228,8 +235,7 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
             return Column(
               children: [
                 _buildBudgetCard(budget),
-                if (index < budgets.length - 1)
-                  const SizedBox(height: 16),
+                if (index < budgets.length - 1) const SizedBox(height: 16),
               ],
             );
           },
@@ -239,38 +245,39 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
   }
 
   Widget _buildError(String error) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error, color: Colors.red, size: 40),
+          Icon(Icons.error, color: colorScheme.error, size: 40),
           const SizedBox(height: 10),
           Text(error, textAlign: TextAlign.center),
           const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: _refresh,
-            child: const Text("Retry"),
-          )
+          ElevatedButton(onPressed: _refresh, child: const Text("Retry")),
         ],
       ),
     );
   }
 
   Widget _buildEmpty() {
-    return const Center(
+    final theme = Theme.of(context);
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.account_balance_wallet_outlined,
             size: 60,
-            color: Colors.grey,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             "No budget created yet.\nTap + to add one!",
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 18, color: Colors.black54),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -278,8 +285,13 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
   }
 
   Widget _buildBudgetCard(Budget budget) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Card(
-      elevation: 4,
+      elevation: 2, 
+      color: colorScheme.surfaceContainerLow, 
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -291,30 +303,31 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
               children: [
                 Text(
                   "Budget ${budget.month.toString().padLeft(2, '0')}/${budget.year}",
-                  style: const TextStyle(
-                    fontSize: 22,
+                  style: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Icon(Icons.calendar_month, color: Colors.grey),
+                Icon(Icons.calendar_month, color: colorScheme.onSurfaceVariant),
               ],
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Monthly Budget",
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+            Text(
+              "Monthly Limit",
+              style: textTheme.labelLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
               "${_convertAmount(budget.monthlyLimit).toStringAsFixed(2)} $_currentCurrency",
-              style: const TextStyle(
-                fontSize: 32,
+              style: textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
+                color: colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 20),
-
-
-    ])));
+          ],
+        ),
+      ),
+    );
   }
 }

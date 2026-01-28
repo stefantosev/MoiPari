@@ -77,17 +77,20 @@ class _CategoryPageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final navNotifier = ref.read(navigationIndexProvider.notifier);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Categories'),
-        backgroundColor: Colors.deepPurpleAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        color: Colors.deepPurpleAccent,
+        color: colorScheme.primary,
         child: Stack(
           children: [
             Positioned(
@@ -97,9 +100,9 @@ class _CategoryPageState extends ConsumerState<HomePage> {
               bottom: 0,
               child: Container(
                 padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(30),
                     topRight: Radius.circular(30),
                   ),
@@ -110,7 +113,12 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
+                      return Center(
+                        child: Text(
+                          'Error: ${snapshot.error}',
+                          style: TextStyle(color: colorScheme.error),
+                        ),
+                      );
                     } else if (snapshot.hasData) {
                       final categories = snapshot.data!;
 
@@ -129,7 +137,8 @@ class _CategoryPageState extends ConsumerState<HomePage> {
 
                                 if (!context.mounted) return;
 
-                                if (result == "created" || result == "updated") {
+                                if (result == "created" ||
+                                    result == "updated") {
                                   _refreshCategories();
                                   navNotifier.state = 0;
                                 }
@@ -140,13 +149,13 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                                   vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.deepPurpleAccent,
+                                  color: colorScheme.primary,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   "Add",
-                                  style: TextStyle(
-                                    color: Colors.white,
+                                  style: textTheme.labelLarge?.copyWith(
+                                    color: colorScheme.onPrimary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -178,7 +187,8 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                                       vertical: 14,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.grey.shade100,
+                                      color: colorScheme.surfaceContainerHighest
+                                          .withValues(alpha: 0.5),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
@@ -210,18 +220,19 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                                             children: [
                                               Text(
                                                 category.name,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
+                                                style: textTheme.titleMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
                                                 '${category.expenseIds.length} expenses',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey[600],
-                                                ),
+                                                style: textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color: theme.hintColor,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -230,10 +241,10 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                                         IconButton(
                                           onPressed: () =>
                                               _handleEdit(category),
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.edit,
                                             size: 20,
-                                            color: Colors.deepPurpleAccent,
+                                            color: colorScheme.primary,
                                           ),
                                           tooltip: 'Edit Category',
                                         ),
@@ -241,10 +252,10 @@ class _CategoryPageState extends ConsumerState<HomePage> {
                                         IconButton(
                                           onPressed: () =>
                                               _handleDelete(category.id),
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.delete,
                                             size: 20,
-                                            color: Colors.red,
+                                            color: colorScheme.error,
                                           ),
                                           tooltip: 'Delete Category',
                                         ),

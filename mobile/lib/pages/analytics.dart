@@ -137,11 +137,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       lastDate: DateTime.now(),
       initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
       builder: (context, child) {
+        final theme = Theme.of(context);
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Theme.of(context).primaryColor,
-              onPrimary: Colors.white,
+          data: theme.copyWith(
+            colorScheme: theme.colorScheme.copyWith(
+              primary: theme.primaryColor,
+              onPrimary: theme.colorScheme.onPrimary,
             ),
           ),
           child: child!,
@@ -160,6 +161,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   void _showMonthlyExpenses(String monthYearStr) async {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     try {
       final date = DateTime.parse(monthYearStr);
       final startDate = DateTime(date.year, date.month, 1);
@@ -183,6 +187,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
+        backgroundColor: colorScheme.surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -198,15 +203,21 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
                     'Expenses for ${DateFormat('MMMM yyyy').format(date)}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
                 Expanded(
                   child: expenses.isEmpty
-                      ? const Center(child: Text('No expenses for this month'))
+                      ? Center(
+                          child: Text(
+                            'No expenses for this month',
+                            style: TextStyle(color: colorScheme.onSurfaceVariant),
+                          ),
+                        )
                       : ListView.builder(
                           controller: scrollController,
                           itemCount: expenses.length,
@@ -216,37 +227,44 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                             if (expense.categoryIds.isNotEmpty) {
                               categoryName =
                                   _categoryNameMap[expense.categoryIds.first] ??
-                                  'Unknown';
+                                      'Unknown';
                             }
 
                             return ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: Colors.deepPurpleAccent
-                                    .withValues(alpha: 0.1),
+                                backgroundColor: colorScheme.primaryContainer
+                                    .withValues(alpha: 0.5),
                                 child: Icon(
                                   Icons.receipt,
-                                  color: Colors.deepPurpleAccent,
+                                  color: colorScheme.onPrimaryContainer,
                                 ),
                               ),
-                              title: Text(expense.description),
-                              subtitle: Text(categoryName),
+                              title: Text(
+                                expense.description,
+                                style: TextStyle(color: colorScheme.onSurface),
+                              ),
+                              subtitle: Text(
+                                categoryName,
+                                style: TextStyle(color: colorScheme.onSurfaceVariant),
+                              ),
                               trailing: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
                                     '\$${expense.amount.toStringAsFixed(2)}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
+                                      color: colorScheme.onSurface,
                                     ),
                                   ),
                                   Text(
                                     DateFormat(
                                       'MMM dd',
                                     ).format(expense.date ?? DateTime.now()),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey,
+                                      color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -270,10 +288,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   void _showCategoryExpenses(String categoryLabel) {
     final expenses = _categoryExpensesMap[categoryLabel] ?? [];
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -289,15 +310,21 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
                   '$categoryLabel Expenses',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ),
               Expanded(
                 child: expenses.isEmpty
-                    ? const Center(child: Text('No expenses for this category'))
+                    ? Center(
+                        child: Text(
+                          'No expenses for this category',
+                          style: TextStyle(color: colorScheme.onSurfaceVariant),
+                        ),
+                      )
                     : ListView.builder(
                         controller: scrollController,
                         itemCount: expenses.length,
@@ -305,23 +332,28 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           final expense = expenses[index];
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Colors.deepPurpleAccent
-                                  .withValues(alpha: 0.1),
+                              backgroundColor: colorScheme.primaryContainer
+                                  .withValues(alpha: 0.5),
                               child: Icon(
                                 Icons.receipt,
-                                color: Colors.deepPurpleAccent,
+                                color: colorScheme.onPrimaryContainer,
                               ),
                             ),
-                            title: Text(expense.description),
+                            title: Text(
+                              expense.description,
+                              style: TextStyle(color: colorScheme.onSurface),
+                            ),
                             subtitle: Text(
                               DateFormat(
                                 'MMM dd, yyyy',
                               ).format(expense.date ?? DateTime.now()),
+                              style: TextStyle(color: colorScheme.onSurfaceVariant),
                             ),
                             trailing: Text(
                               '\$${expense.amount.toStringAsFixed(2)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                           );
@@ -337,17 +369,20 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.deepPurpleAccent,
+      backgroundColor: colorScheme.primary,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.deepPurpleAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         title: const Text('Analytics'),
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh, color: colorScheme.onPrimary),
             onPressed: _loadAnalyticsData,
           ),
         ],
@@ -358,9 +393,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 const SizedBox(height: 16),
                 Expanded(
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(24),
                         topRight: Radius.circular(24),
                       ),
@@ -379,9 +414,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface,
+                          borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(32),
                             topRight: Radius.circular(32),
                           ),
@@ -428,20 +463,21 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
 
   Widget _buildDateSelector() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Material(
-        color: Colors.white,
+        color: colorScheme.secondaryContainer,
         borderRadius: BorderRadius.circular(30),
-        elevation: 4,
+        elevation: 0,
         child: InkWell(
           onTap: _selectDateRange,
           borderRadius: BorderRadius.circular(30),
@@ -450,22 +486,25 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today,
                   size: 20,
-                  color: Colors.deepPurpleAccent,
+                  color: colorScheme.onSecondaryContainer,
                 ),
                 const SizedBox(width: 12),
                 Text(
                   '${_dateFormat.format(_startDate)} - ${_dateFormat.format(_endDate)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: Colors.black87,
+                    color: colorScheme.onSecondaryContainer,
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                Icon(
+                  Icons.arrow_drop_down,
+                  color: colorScheme.onSecondaryContainer,
+                ),
               ],
             ),
           ),
@@ -478,6 +517,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     final total = (_analyticsData['totalSpent'] as double?) ?? 0.0;
     final remainingBudget =
         (_analyticsData['remainingBudget'] as double?) ?? 0.0;
+    final theme = Theme.of(context);
+    
+    final remainingColor = remainingBudget >= 0 
+        ? Colors.green 
+        : theme.colorScheme.error;
+
     return Row(
       children: [
         Expanded(
@@ -485,7 +530,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             'Total Spent',
             '\$${total.toStringAsFixed(0)}',
             Icons.attach_money,
-            Colors.blue,
+            theme.colorScheme.primary,
           ),
         ),
         const SizedBox(width: 12),
@@ -494,7 +539,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             'Remaining',
             '\$${remainingBudget.toStringAsFixed(0)}',
             Icons.account_balance_wallet,
-            remainingBudget >= 0 ? Colors.green : Colors.red,
+            remainingColor,
           ),
         ),
         const SizedBox(width: 12),
@@ -502,8 +547,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           child: _buildInfoCard(
             'Categories',
             '${_categoryData.length}',
-            Icons.category,
-            Colors.purple,
+            Icons.category_sharp,
+            theme.colorScheme.tertiary,
           ),
         ),
       ],
@@ -516,14 +561,17 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     IconData icon,
     Color color,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -543,16 +591,29 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18, 
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 4),
-          Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          Text(
+            title, 
+            style: TextStyle(
+              fontSize: 12, 
+              color: colorScheme.onSurfaceVariant
+            )
+          ),
         ],
       ),
     );
   }
 
   Widget _buildCategoryChart() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
     if (_categoryData.isEmpty) {
       return _buildEmptyState('No spending data for this period');
     }
@@ -567,11 +628,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       height: 300,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -584,6 +645,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           iconHeight: 10,
           iconWidth: 10,
           overflowMode: LegendItemOverflowMode.wrap,
+          textStyle: TextStyle(color: colorScheme.onSurface),
         ),
         series: <CircularSeries>[
           DoughnutSeries<_ChartData, String>(
@@ -593,9 +655,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             dataLabelSettings: DataLabelSettings(
               isVisible: true,
               labelPosition: ChartDataLabelPosition.outside,
-              textStyle: const TextStyle(
+              textStyle: TextStyle(
                 fontSize: 10,
-                color: Colors.deepPurpleAccent,
+                color: colorScheme.onSurface,
               ),
               builder:
                   (
@@ -607,9 +669,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                   ) {
                     return Text(
                       '\$${(data as _ChartData).y.toStringAsFixed(0)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: Colors.deepPurpleAccent,
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     );
@@ -632,6 +694,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   Widget _buildMonthlyChart() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (_monthlyData.isEmpty) {
       return _buildEmptyState('No monthly data available');
     }
@@ -644,11 +709,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       height: 250,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -659,6 +724,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           majorGridLines: const MajorGridLines(width: 0),
           axisLine: const AxisLine(width: 0),
           labelIntersectAction: AxisLabelIntersectAction.rotate45,
+          labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
           axisLabelFormatter: (AxisLabelRenderDetails details) {
             try {
               final date = DateTime.parse(details.text);
@@ -694,14 +760,15 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                   ) {
                     return Text(
                       '\$${(data as _ChartData).y.toStringAsFixed(0)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
                     );
                   },
             ),
-            color: Theme.of(context).primaryColor,
+            color: colorScheme.primary,
             borderRadius: BorderRadius.circular(4),
             onPointTap: (ChartPointDetails details) {
               if (details.pointIndex != null &&
@@ -717,17 +784,20 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   Widget _buildTopExpensesList() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (_topExpenses.isEmpty) {
       return _buildEmptyState('No expenses found');
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -738,28 +808,35 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _topExpenses.length,
         separatorBuilder: (context, index) =>
-            const Divider(height: 1, indent: 16, endIndent: 16),
+            Divider(height: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant),
         itemBuilder: (context, index) {
           final expense = _topExpenses[index];
 
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.grey[100],
-              child: const Icon(Icons.receipt_long, color: Colors.grey),
+              backgroundColor: colorScheme.surfaceContainerHigh,
+              child: Icon(Icons.receipt_long, color: colorScheme.onSurfaceVariant),
             ),
             title: Text(
               expense.description,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
             ),
             subtitle: Text(
               expense.date != null
                   ? _dateFormat.format(expense.date!)
                   : 'Unknown Date',
-              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
             ),
             trailing: Text(
               '\$${expense.amount.toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                fontSize: 16,
+                color: colorScheme.onSurface,
+              ),
             ),
           );
         },
@@ -768,6 +845,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   Widget _buildPaymentMethodChart() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (_paymentMethodData.isEmpty) {
       return _buildEmptyState('No payment method data');
     }
@@ -789,11 +869,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           height: 300,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: theme.shadowColor.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -804,6 +884,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               isVisible: true,
               position: LegendPosition.right,
               overflowMode: LegendItemOverflowMode.wrap,
+              textStyle: TextStyle(color: colorScheme.onSurface),
             ),
             series: <CircularSeries>[
               PieSeries<_ChartData, String>(
@@ -824,9 +905,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                       ) {
                         return Text(
                           '\$${(data as _ChartData).y.toStringAsFixed(0)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
                           ),
                         );
                       },
@@ -838,11 +920,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         const SizedBox(height: 16),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: theme.shadowColor.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -853,7 +935,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: chartData.length,
             separatorBuilder: (context, index) =>
-                const Divider(height: 1, indent: 16, endIndent: 16),
+                Divider(height: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant),
             itemBuilder: (context, index) {
               final data = chartData[index];
               final percentage = total > 0 ? (data.y / total * 100) : 0.0;
@@ -864,16 +946,16 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               switch (data.x.toLowerCase()) {
                 case 'cash':
                   icon = Icons.money;
-                  iconColor = Colors.blue;
+                  iconColor = colorScheme.tertiary;
                   break;
                 case 'credit card':
                 case 'card':
                   icon = Icons.credit_card;
-                  iconColor = Colors.purple;
+                  iconColor = colorScheme.secondary;
                   break;
                 default:
                   icon = Icons.payment;
-                  iconColor = Colors.grey;
+                  iconColor = colorScheme.outline;
               }
 
               return ListTile(
@@ -883,17 +965,21 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 ),
                 title: Text(
                   data.x,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
                 subtitle: Text(
                   '${percentage.toStringAsFixed(1)}% of total',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
                 ),
                 trailing: Text(
                   '\$${data.y.toStringAsFixed(2)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               );
@@ -905,19 +991,22 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   Widget _buildEmptyState(String message) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         children: [
-          Icon(Icons.bar_chart, size: 48, color: Colors.grey[300]),
+          Icon(Icons.bar_chart, size: 48, color: colorScheme.outline),
           const SizedBox(height: 12),
-          Text(message, style: TextStyle(color: Colors.grey[500])),
+          Text(message, style: TextStyle(color: colorScheme.onSurfaceVariant)),
         ],
       ),
     );
