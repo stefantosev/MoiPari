@@ -14,6 +14,10 @@ class RegisterPage extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final authNotifier = ref.read(authStateProvider.notifier);
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     if (authState.isAuthenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/main');
@@ -24,12 +28,7 @@ class RegisterPage extends ConsumerWidget {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xFFFFC1CC), Color(0xFFFFA6C9)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: colorScheme.primary,
         child: Stack(
           children: [
             Center(
@@ -43,7 +42,10 @@ class RegisterPage extends ConsumerWidget {
                       Align(
                         alignment: Alignment.topLeft,
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.black),
+                          icon: Icon(
+                            Icons.arrow_back,
+                            color: colorScheme.onPrimary,
+                          ),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ),
@@ -57,22 +59,32 @@ class RegisterPage extends ConsumerWidget {
                           padding: const EdgeInsets.all(12),
                           margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
-                            color: Colors.red[50],
+                            color: colorScheme.errorContainer,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red),
+                            border: Border.all(color: colorScheme.error),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error, color: Colors.red, size: 20),
+                              Icon(
+                                Icons.error,
+                                color: colorScheme.error,
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   authState.error!,
-                                  style: const TextStyle(color: Colors.red),
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.error,
+                                  ),
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.close, size: 16),
+                                icon: Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: colorScheme.error,
+                                ),
                                 onPressed: () => authNotifier.clearError(),
                               ),
                             ],
@@ -82,21 +94,28 @@ class RegisterPage extends ConsumerWidget {
                       TextField(
                         controller: _userNameController,
                         decoration: InputDecoration(
-                          fillColor: Colors.white,
+                          fillColor: colorScheme.surface,
                           filled: true,
                           labelText: 'Username',
+                          labelStyle: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
+
                       TextField(
                         controller: _emailController,
                         decoration: InputDecoration(
-                          fillColor: Colors.white,
+                          fillColor: colorScheme.surface,
                           filled: true,
                           labelText: 'Email',
+                          labelStyle: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -104,12 +123,16 @@ class RegisterPage extends ConsumerWidget {
                         keyboardType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 16),
+
                       TextField(
                         controller: _passwordController,
                         decoration: InputDecoration(
-                          fillColor: Colors.white,
+                          fillColor: colorScheme.surface,
                           filled: true,
                           labelText: 'Password',
+                          labelStyle: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -125,49 +148,51 @@ class RegisterPage extends ConsumerWidget {
                           onPressed: authState.isLoading
                               ? null
                               : () {
-                            authNotifier.register(
-                              _userNameController.text.trim(),
-                              _emailController.text.trim(),
-                              _passwordController.text,
-                            );
-                          },
+                                  authNotifier.register(
+                                    _userNameController.text.trim(),
+                                    _emailController.text.trim(),
+                                    _passwordController.text,
+                                  );
+                                },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurpleAccent,
+                            backgroundColor: colorScheme.surface,
+                            foregroundColor: colorScheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           child: authState.isLoading
-                              ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                              : const Text(
-                            "Register",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                              ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.primary,
+                                  ),
+                                )
+                              : Text(
+                                  "Register",
+                                  style: textTheme.titleMedium?.copyWith(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
 
                       const SizedBox(height: 16),
 
                       if (authState.isLoading)
-                        const Column(
+                        Column(
                           children: [
-                            SizedBox(height: 16),
-                            CircularProgressIndicator(),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 16),
+                            CircularProgressIndicator(
+                              color: colorScheme.onPrimary,
+                            ),
+                            const SizedBox(height: 8),
                             Text(
                               "Creating account...",
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(color: colorScheme.onPrimary),
                             ),
                           ],
                         ),

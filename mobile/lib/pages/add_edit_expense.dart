@@ -48,15 +48,8 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      builder: (context, child) => Theme(
-        data: ThemeData.light().copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Colors.deepPurpleAccent,
-            onPrimary: Colors.white,
-          ),
-        ),
-        child: child!,
-      ),
+      builder: (context, child) =>
+          Theme(data: Theme.of(context), child: child!),
     );
 
     if (picked != null && picked != _selectedDate) {
@@ -90,6 +83,10 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
   void _selectCategories() {
     ref.invalidate(categoryProvider);
 
+    final theme_ = Theme.of(context);
+
+    final colorScheme = theme_.colorScheme;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -100,9 +97,9 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
 
           return Container(
             height: MediaQuery.of(context).size.height * 0.85,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: colorScheme.onPrimary,
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(25),
                 topRight: Radius.circular(25),
               ),
@@ -112,8 +109,7 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
-
+                    color: colorScheme.surface,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(25),
                       topRight: Radius.circular(25),
@@ -122,24 +118,30 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Select Categories',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: colorScheme.primary,
                         ),
                       ),
                       Row(
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.refresh, color: Colors.grey),
+                            icon: Icon(
+                              Icons.refresh,
+                              color: colorScheme.secondary,
+                            ),
                             onPressed: () {
                               ref.invalidate(categoryProvider);
                             },
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close, color: Colors.grey),
+                            icon: Icon(
+                              Icons.close,
+                              color: colorScheme.secondary,
+                            ),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
@@ -149,8 +151,11 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                 ),
                 Expanded(
                   child: categoriesAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
+                    loading: () => Center(
+                      child: CircularProgressIndicator(
+                        color: colorScheme.primary,
+                      ),
+                    ),
                     error: (error, stack) =>
                         Center(child: Text('Error: $error')),
                     data: (categories) => StatefulBuilder(
@@ -163,7 +168,7 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                                   crossAxisCount: 3,
                                   crossAxisSpacing: 12,
                                   mainAxisSpacing: 12,
-                                  childAspectRatio: 1.2,
+                                  childAspectRatio: 1.1,
                                 ),
                             itemCount: categories.length,
                             itemBuilder: (context, index) {
@@ -184,18 +189,18 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                                   setState(() {});
                                 },
                                 child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
+                                  duration: const Duration(milliseconds: 200),
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? Colors.deepPurpleAccent.withValues(
-                                            alpha: 0.1,
+                                        ? colorScheme.primary.withValues(
+                                            alpha: 0.2,
                                           )
-                                        : Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(15),
+                                        : colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
                                       color: isSelected
-                                          ? Colors.deepPurpleAccent
-                                          : Colors.grey[300]!,
+                                          ? colorScheme.primary
+                                          : colorScheme.secondary,
                                       width: isSelected ? 2 : 1,
                                     ),
                                   ),
@@ -203,14 +208,22 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.all(12),
+                                        padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
                                           color: isSelected
-                                              ? Colors.deepPurpleAccent
-                                              : category.colorValue,
+                                              ? colorScheme.primary
+                                              : category.colorValue.withValues(
+                                                  alpha: 0.2,
+                                                ),
                                           shape: BoxShape.circle,
                                         ),
-                                        child: Icon(category.iconData),
+                                        child: Icon(
+                                          category.iconData,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : category.colorValue,
+                                          size: 20,
+                                        ),
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
@@ -219,11 +232,12 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
                                           color: isSelected
-                                              ? Colors.deepPurpleAccent
-                                              : Colors.grey[700],
+                                              ? Colors.white
+                                              : colorScheme.secondary,
                                         ),
                                         textAlign: TextAlign.center,
-                                        maxLines: 2,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -244,11 +258,11 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurpleAccent,
+                        backgroundColor: colorScheme.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        elevation: 2,
+                        elevation: 0,
                       ),
                       child: const Text(
                         'Done',
@@ -271,24 +285,29 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context).colorScheme;
+    final theme_ = Theme.of(context);
+
+    final colorScheme = theme_.colorScheme;
+    // final textTheme = theme_.textTheme;
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: colorScheme.surface,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
           widget.expense == null ? 'Add Expense' : 'Edit Expense',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: colorScheme.secondary,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
-        foregroundColor: Colors.black87,
+        foregroundColor: colorScheme.primary,
         actions: [
           if (widget.expense != null)
             IconButton(
-              icon: const Icon(Icons.delete_outline),
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
               onPressed: () {
                 ref
                     .read(expenseProvider.notifier)
@@ -310,34 +329,34 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Amount',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: theme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _amountController,
-                        style: const TextStyle(
-                          fontSize: 24,
+                        style: TextStyle(
+                          fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: theme.primary,
                         ),
-                        keyboardType: TextInputType.numberWithOptions(
+                        keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: '0.00',
-                          hintStyle: TextStyle(color: Colors.grey),
+                          hintStyle: TextStyle(color: Colors.grey[700]),
                           border: InputBorder.none,
                           prefixText: '\$ ',
                           prefixStyle: TextStyle(
-                            fontSize: 24,
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey,
+                            color: colorScheme.primary,
                           ),
                         ),
                         validator: (value) {
@@ -353,30 +372,29 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-
+                const SizedBox(height: 16),
                 _buildInputCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Description',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: colorScheme.secondary,
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _descriptionController,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          color: Colors.black87,
+                          color: colorScheme.primary,
                         ),
-                        decoration: const InputDecoration(
-                          hintText: 'What was this expense for?',
-                          hintStyle: TextStyle(color: Colors.grey),
+                        decoration: InputDecoration(
+                          hintText: 'What is this for?',
+                          hintStyle: TextStyle(color: Colors.grey[700]),
                           border: InputBorder.none,
                         ),
                         validator: (value) {
@@ -389,8 +407,7 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -399,24 +416,34 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Date',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey,
+                                color: colorScheme.secondary,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _selectedDate == null
-                                  ? 'Select Date'
-                                  : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 16,
+                                  color: colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _selectedDate == null
+                                      ? 'Select Date'
+                                      : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -429,36 +456,43 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Payment',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey,
+                                color: colorScheme.secondary,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
                             Row(
                               children: [
+                                Icon(
+                                  _selectedPaymentMethod == 'CASH'
+                                      ? Icons.wallet
+                                      : Icons.credit_card,
+                                  size: 16,
+                                  color: _selectedPaymentMethod == null
+                                      ? Colors.grey
+                                      : colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     _selectedPaymentMethod == null
-                                        ? 'Select payment method'
+                                        ? 'Select'
                                         : _selectedPaymentMethod == 'CASH'
                                         ? 'Cash'
                                         : 'Card',
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.w600,
                                       color: _selectedPaymentMethod == null
                                           ? Colors.grey
-                                          : Colors.black87,
+                                          : colorScheme.primary,
                                     ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                Icon(
-                                  Icons.arrow_drop_down,
-                                  color: Colors.grey[400],
                                 ),
                               ],
                             ),
@@ -468,8 +502,7 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-
+                const SizedBox(height: 16),
                 _buildInputCard(
                   onTap: _selectCategories,
                   child: Row(
@@ -478,15 +511,15 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Categories',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                color: colorScheme.secondary,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
                             Text(
                               _selectedCategoryIds.isEmpty
                                   ? 'Select categories'
@@ -494,8 +527,8 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                               style: TextStyle(
                                 fontSize: 14,
                                 color: _selectedCategoryIds.isEmpty
-                                    ? Colors.grey
-                                    : Colors.deepPurpleAccent,
+                                    ? Colors.grey[700]
+                                    : colorScheme.primary,
                                 fontWeight: _selectedCategoryIds.isEmpty
                                     ? FontWeight.normal
                                     : FontWeight.w600,
@@ -507,34 +540,36 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurpleAccent.withValues(alpha: 0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.arrow_forward_ios,
-                          color: Colors.deepPurpleAccent,
-                          size: 16,
+                          color: colorScheme.primary,
+                          size: 14,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 32),
-
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
                     onPressed: _submitForm,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurpleAccent,
+                      backgroundColor: colorScheme.primary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      elevation: 2,
+                      elevation: 4,
+                      shadowColor: colorScheme.primary.withValues(alpha: 0.4),
                     ),
                     child: Text(
-                      widget.expense == null ? 'Add Expense' : 'Update Expense',
+                      widget.expense == null
+                          ? 'Save Expense'
+                          : 'Update Expense',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -543,26 +578,24 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                     ),
                   ),
                 ),
-
                 if (widget.expense != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     height: 56,
-                    child: OutlinedButton(
+                    child: TextButton(
                       onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
+                      style: TextButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        side: const BorderSide(color: Colors.grey),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancel',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey,
+                          color: colorScheme.secondary,
                         ),
                       ),
                     ),
@@ -577,21 +610,18 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
   }
 
   Widget _buildInputCard({required Widget child, VoidCallback? onTap}) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+          ),
         ),
         child: child,
       ),
@@ -599,15 +629,19 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
   }
 
   void _showPaymentMethodModal() {
+    final theme_ = Theme.of(context);
+
+    final colorScheme = theme_.colorScheme;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.4,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        height: MediaQuery.of(context).size.height * 0.45,
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(25),
             topRight: Radius.circular(25),
           ),
@@ -617,7 +651,7 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: colorScheme.surface,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(25),
                   topRight: Radius.circular(25),
@@ -626,16 +660,16 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Payment Method',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: colorScheme.primary,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.grey),
+                    icon: Icon(Icons.close, color: colorScheme.secondary),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -643,7 +677,7 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 children: [
                   _buildPaymentOption(
                     title: 'Cash',
@@ -686,17 +720,22 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final theme_ = Theme.of(context);
+
+    final colorScheme = theme_.colorScheme;
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.deepPurpleAccent.withValues(alpha: 0.1)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(15),
+              ? colorScheme.primary.withValues(alpha: 0.1)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? Colors.deepPurpleAccent : Colors.grey[300]!,
+            color: isSelected ? colorScheme.primary : Colors.white10,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -705,12 +744,12 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.deepPurpleAccent : Colors.grey[200],
+                color: isSelected ? colorScheme.primary : Colors.black26,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                color: isSelected ? Colors.white : Colors.grey[700],
+                color: isSelected ? Colors.white : Colors.grey,
                 size: 20,
               ),
             ),
@@ -725,8 +764,8 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: isSelected
-                          ? Colors.deepPurpleAccent
-                          : Colors.black87,
+                          ? colorScheme.primary
+                          : colorScheme.outline,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -735,19 +774,15 @@ class _AddEditExpensePageState extends ConsumerState<AddEditExpensePage> {
                     style: TextStyle(
                       fontSize: 14,
                       color: isSelected
-                          ? Colors.deepPurpleAccent
-                          : Colors.grey[600],
+                          ? colorScheme.primary.withValues(alpha: .8)
+                          : colorScheme.secondaryFixedDim,
                     ),
                   ),
                 ],
               ),
             ),
             if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: Colors.deepPurpleAccent,
-                size: 24,
-              ),
+              Icon(Icons.check_circle, color: colorScheme.primary, size: 24),
           ],
         ),
       ),
