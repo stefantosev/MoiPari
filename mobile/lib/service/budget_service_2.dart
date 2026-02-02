@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile/exceptions/budget_exceptions.dart';
 import 'package:mobile/models/budget.dart';
 import 'auth_service.dart';
 
@@ -24,14 +25,19 @@ class BudgetService {
       } else if (response.statusCode == 401) {
         await AuthService.logout();
         throw Exception("Session expired. Please login again.");
+      } else if (response.statusCode == 403) {
+        throw NoBudgetSetExcpetion();
       } else {
-        throw Exception(
-          "Failed to get current budget (Status code: ${response.statusCode})",
+        throw BudgetServiceException(
+          "Failed to get current budget",
+          statusCode: response.statusCode,
         );
       }
     } catch (e) {
-      debugPrint("Error fetching current budget: $e");
-      throw Exception("Failed to load current budget: $e");
+      if (e is NoBudgetSetExcpetion || e is BudgetServiceException) {
+        rethrow;
+      }
+      throw BudgetServiceException('Failed to load current budget: $e');
     }
   }
 
@@ -75,7 +81,7 @@ class BudgetService {
       }
 
       final Map<String, dynamic> body = {
-        'amount': amount,
+        'monthlyLimit': amount,
         'month': month,
         'year': year,
       };
@@ -120,7 +126,7 @@ class BudgetService {
       }
 
       final Map<String, dynamic> body = {
-        'amount': amount,
+        'monthlyLimit': amount,
         'month': month,
         'year': year,
       };

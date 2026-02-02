@@ -17,6 +17,7 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
   double? _totalBudget;
   bool _isLoading = true;
   String? _error;
+  final userEmail = AuthService.getUserEmail();
 
   @override
   void initState() {
@@ -43,9 +44,11 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
         return;
       }
 
-      final now = DateTime.now();
+      final currentMonth = DateTime.now().month;
+      final currentYear = DateTime.now().year;
 
-      final Map<String, dynamic> budget = await _budgetService.getRemainingBudget(1,2026);
+      final Map<String, dynamic> budget = await _budgetService
+          .getRemainingBudget(currentMonth, currentYear);
 
       setState(() {
         _totalBudget = budget['remaining'];
@@ -66,10 +69,12 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final isAuth = authState.isAuthenticated;
+
     final cardHolderName = isAuth ? "AUTHENTICATED USER" : "GUEST USER";
 
     final now = DateTime.now();
-    final displayMonthYear = "${now.month.toString().padLeft(2, '0')}/${now.year}";
+    final displayMonthYear =
+        "${now.month.toString().padLeft(2, '0')}/${now.year}";
 
     void navigateToBudget() {
       if (!isAuth) {
@@ -126,11 +131,19 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         height: 200,
-        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 22, top: 22),
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: 22,
+          top: 22,
+        ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+            colors: [
+              color.withValues(alpha: 0.9),
+              color.withValues(alpha: 0.6),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -153,8 +166,19 @@ class _CreditCardWidgetState extends ConsumerState<CreditCardWidget> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                _buildDetailsBlock(label: "CARDHOLDER", value: cardHolder),
-                _buildDetailsBlock(label: "TOTAL BUDGET FOR", value: cardExpiration),
+                FutureBuilder(
+                  future: userEmail,
+                  builder: (context, snapshot) {
+                    return _buildDetailsBlock(
+                      label: "CARDHOLDER",
+                      value: snapshot.data.toString(),
+                    );
+                  },
+                ),
+                _buildDetailsBlock(
+                  label: "TOTAL BUDGET FOR",
+                  value: cardExpiration,
+                ),
               ],
             ),
           ],
