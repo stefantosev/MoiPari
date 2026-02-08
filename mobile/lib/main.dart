@@ -5,11 +5,15 @@ import 'package:mobile/pages/login.dart';
 import 'package:mobile/pages/register.dart';
 import 'package:mobile/main_wrapper.dart';
 import 'package:mobile/providers/theme_provider.dart';
+import 'package:mobile/service/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await AuthService.init();
+
+  
   final sharedPreferences = await SharedPreferences.getInstance();
 
   runApp(

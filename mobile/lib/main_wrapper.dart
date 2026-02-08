@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/pages/add_edit_expense.dart';
-import 'package:mobile/pages/analytics.dart';
+import 'package:mobile/pages/analytics_page.dart';
+// import 'package:mobile/pages/analytics.dart';
 import 'package:mobile/pages/budget.dart';
 import 'package:mobile/pages/home.dart';
 import 'package:mobile/pages/expenses.dart';
+// import 'package:mobile/pages/expenses_page.dart';
 import 'package:mobile/pages/auth.dart';
 import 'package:mobile/pages/profile.dart';
 import 'package:mobile/pages/welcome.dart';

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/models/expense.dart';
 import 'package:mobile/pages/add_edit_expense.dart';
 import '../models/category.dart';
-import '../providers/real_provider.dart';
+import '../providers/state_providers.dart';
 
 class ExpensePage extends ConsumerStatefulWidget {
   const ExpensePage({super.key});
@@ -67,57 +67,81 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
                     ),
                   ),
                 ),
-                error: (err, stack) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.secondary,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error loading expenses',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '$err',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          ref.invalidate(expenseProvider);
-                        },
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
+                error: (err, stack) => _buildErrorWidget(context, err),
                 data: (expenses) {
                   final filteredExpenses = _filterExpenses(expenses);
                   if (filteredExpenses.isEmpty) {
                     return _buildEmptyState();
                   }
 
+                  final categorizedExpenses = categorizeExpensesByDate(
+                    filteredExpenses,
+                  );
+                  final categoryKeys = categorizedExpenses.keys.toList();
+
                   return ListView.builder(
                     padding: const EdgeInsets.all(8),
-                    itemCount: filteredExpenses.length,
+                    itemCount: categoryKeys.length,
                     itemBuilder: (context, index) {
-                      final expense = filteredExpenses[index];
-                      return _buildExpenseCard(
-                        expense,
-                        context,
-                        categoriesAsync,
+                      final category = categoryKeys[index];
+                      final categoryExpenses = categorizedExpenses[category]!;
+                      final totalAmount = categoryExpenses
+                          .map((e) => e.amount)
+                          .fold(0.0, (prev, amount) => prev + amount);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            margin: EdgeInsets.only(
+                              bottom: 8,
+                              top: index == 0 ? 0 : 16,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  category,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  '\$${totalAmount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          ...categoryExpenses.map((expense) {
+                            return _buildExpenseCard(
+                              expense,
+                              context,
+                              categoriesAsync,
+                            );
+                          }),
+                        ],
                       );
                     },
                   );
@@ -126,6 +150,92 @@ class _ExpensePageState extends ConsumerState<ExpensePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Map<String, List<Expense>> categorizeExpensesByDate(List<Expense> expenses) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+
+    final Map<String, List<Expense>> categorized = {
+      'Today': [],
+      'Yesterday': [],
+      'This Week': [],
+      'This Month': [],
+      'Older': [],
+    };
+
+    for (final expense in expenses) {
+      final expenseDate = DateTime(
+        expense.date.year,
+        expense.date.month,
+        expense.date.day,
+      );
+
+      if (expenseDate == today) {
+        categorized['Today']!.add(expense);
+      } else if (expenseDate == yesterday) {
+        categorized['Yesterday']!.add(expense);
+      } else if (expenseDate.isAfter(
+            weekStart.subtract(const Duration(days: 1)),
+          ) &&
+          expenseDate.isBefore(today)) {
+        categorized['This Week']!.add(expense);
+      } else if (expenseDate.year == today.year &&
+          expenseDate.month == today.month) {
+        categorized['This Month']!.add(expense);
+      } else {
+        categorized['Older']!.add(expense);
+      }
+    }
+
+    categorized.removeWhere((key, value) => value.isEmpty);
+
+    categorized.forEach((key, value) {
+      value.sort((a, b) => (b.date).compareTo(a.date));
+    });
+
+    return categorized;
+  }
+
+  Center _buildErrorWidget(BuildContext context, Object err) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Theme.of(context).colorScheme.secondary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Error loading expenses',
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '$err',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              ref.invalidate(expenseProvider);
+            },
+            child: const Text('Retry'),
+          ),
+        ],
       ),
     );
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/models/DTO/expense_request.dart';
 import 'package:mobile/models/expense.dart';
-import 'package:mobile/providers/real_provider.dart';
+import 'package:mobile/providers/state_providers.dart';
 
 class AddEditExpensePage extends ConsumerStatefulWidget {
   final Expense? expense;
