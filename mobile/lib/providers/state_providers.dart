@@ -6,6 +6,13 @@ import 'package:mobile/models/category.dart';
 import '../models/expense.dart';
 import '../service/expense_service.dart';
 
+class MonthlySpending {
+  final String month;
+  final double amount;
+  MonthlySpending(this.month, this.amount);
+}
+
+
 // service providers
 final expenseServiceProvider = Provider((ref) => ExpenseService());
 final categoryServiceProvider = Provider((ref) => CategoryService());
@@ -120,14 +127,13 @@ final categorySpendingProvider = Provider<Map<String, double>>((ref) {
             (categoryMap[category.name] ?? 0) + expense.amount;
       }
     }
-    return categoryMap; 
+    return categoryMap;
   }
   return {};
 });
 
 final weeklySpendingProvider = Provider<Map<int, double>>((ref) {
   final expensesAsync = ref.watch(expenseProvider);
-  
   return expensesAsync.maybeWhen(
     data: (expenses) {
       final Map<int, double> weeklyMap = {
@@ -154,30 +160,36 @@ final weeklySpendingProvider = Provider<Map<int, double>>((ref) {
   );
 });
 
-
-final monthlySpendingProvider = Provider<Map<int, double>>((ref) {
+final monthlySpendingProvider = Provider<List<MonthlySpending>>((ref) {
   final expensesAsync = ref.watch(expenseProvider);
   
   return expensesAsync.maybeWhen(
     data: (expenses) {
-      final Map<int, double> monthlyMap = {};
       final now = DateTime.now();
+      final List<MonthlySpending> monthlyList = [];
       
-      // last 6 months
       for (int i = 5; i >= 0; i--) {
-        final month = DateTime(now.year, now.month - i, 1);
-        monthlyMap[month.month] = 0;
+        final targetDate = DateTime(now.year, now.month - i, 1);
+        final monthName = _getMonthName(targetDate.month);
+        
+        final spending = expenses.where((expense) {
+          return expense.date.year == targetDate.year &&
+                 expense.date.month == targetDate.month;
+        }).fold(0.0, (sum, e) => sum + e.amount);
+        
+        monthlyList.add(MonthlySpending(monthName, spending));
       }
       
-      for (var expense in expenses) {
-        final monthKey = expense.date.month;
-        if (monthlyMap.containsKey(monthKey)) {
-          monthlyMap[monthKey] = (monthlyMap[monthKey] ?? 0) + expense.amount;
-        }
-      }
-      return monthlyMap;
+      return monthlyList;
     },
-    orElse: () => {},
+    orElse: () => [],
   );
 });
+
+String _getMonthName(int month) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return months[(month - 1) % 12];
+}
+
 

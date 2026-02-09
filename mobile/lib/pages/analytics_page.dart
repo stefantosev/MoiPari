@@ -10,76 +10,90 @@ import 'package:mobile/providers/state_providers.dart';
 import 'package:mobile/utils/color_utils.dart';
 import 'package:mobile/utils/icon_utils.dart';
 
-class AnalyticsPage extends ConsumerWidget {
+class AnalyticsPage extends ConsumerStatefulWidget {
   const AnalyticsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final weeklyAsync = ref.watch(weeklySpendingProvider);
-    final categorySpending = ref.watch(categorySpendingProvider);
+  ConsumerState<ConsumerStatefulWidget> createState() {
+    return _AnalyticsPageState();
+  }
+}
 
+class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
+  String selectedPeriod = 'Week';
+
+  @override
+  Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Scaffold(
+        appBar: AppBar(title: Text("Analytics"),),
+        body: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                "Weekly Activity",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'Week', label: Text('Week')),
+                  ButtonSegment(value: 'Month', label: Text('Month')),
+                  ButtonSegment(value: 'Year', label: Text('Year')),
+                ],
+                selected: {selectedPeriod},
+                onSelectionChanged: (Set<String> newSelection) {
+                  setState(() {
+                    selectedPeriod = newSelection.first;
+                  });
+                },
               ),
             ),
-            Container(
-              height: 200,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: WeeklyBarChart(weeklyData: weeklyAsync),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SpendingSummaryCards(),
+                    const SizedBox(height: 16),
+        
+                    const TopSpendingCategories(),
+                    const Divider(),
+        
+                    if (selectedPeriod == 'Week') ...[
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'Weekly Activity',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 200,
+                        child: WeeklyBarChart(
+                          weeklyData: ref.watch(weeklySpendingProvider),
+                        ),
+                      ),
+                    ] else if (selectedPeriod == 'Month') ...[
+                      const MonthlyTrendChart(),
+                    ] else ...[
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: Text('Year view coming soon')),
+                      ),
+                    ],
+        
+                    const SizedBox(height: 24),
+        
+                    const CategoryPieChart(),
+                  ],
+                ),
+              ),
             ),
-            CategoryPieChart(),
-
-            // const Divider(height: 32, thickness: 1, indent: 16, endIndent: 16),
-
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 16),
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.start,
-            //     children: [
-            //       const Text(
-            //         "Spending by Category",
-            //         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            //       ),
-            //       const SizedBox(height: 16),
-            //
-            //       if (categorySpending.isEmpty)
-            //         const Text("No category data available")
-            //       else
-            //         ...categorySpending.entries.map((entry) {
-            //           return LegendItem(
-            //             name: entry.key,
-            //             amount: entry.value,
-            //
-            //             color: _getCategoryColor(entry.key, Theme.of(context)),
-            //           );
-            //         }),
-            //     ],
-            //   ),
-            // ),
           ],
         ),
       ),
     );
   }
-
-  // Color _getCategoryColor(String name, ThemeData theme) {
-  //   final colors = [
-  //     theme.colorScheme.primary,
-  //     theme.colorScheme.secondary,
-  //     theme.colorScheme.tertiary,
-  //     Colors.orange,
-  //     Colors.teal,
-  //   ];
-  //   return colors[name.length % colors.length];
-  // }
 }
 
 class WeeklyBarChart extends StatelessWidget {
@@ -330,7 +344,7 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
                           pieTouchResponse == null ||
                           pieTouchResponse.touchedSection == null) {
                         _overlayTimer = Timer(
-                          const Duration(milliseconds: 800),
+                          const Duration(milliseconds: 600),
                           () {
                             _removeOverlay();
                           },
@@ -666,6 +680,148 @@ class _Badge extends StatelessWidget {
       ),
       padding: EdgeInsets.all(size * .15),
       child: Center(child: Icon(icon)),
+    );
+  }
+}
+
+class TopSpendingCategories extends ConsumerWidget {
+  const TopSpendingCategories({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoryData = ref.watch(categorySpendingProvider);
+    final categoriesAsync = ref.watch(categoryProvider);
+
+    if (categoryData.isEmpty) return const SizedBox.shrink();
+
+    final sorted = categoryData.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final top3 = sorted.take(3);
+
+    return categoriesAsync.when(
+      data: (categories) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Top Spending',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            ...top3.map((entry) {
+              final category = categories.firstWhere(
+                (c) => c.name == entry.key,
+                orElse: () =>
+                    Category(-1, "Unknown", "help_outline", "red", 0, [0]),
+              );
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      IconUtils.getIconFromString(category.icon),
+                      color: ColorUtils.fromString(category.color, context),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(entry.key, style: const TextStyle(fontSize: 16)),
+                    const Spacer(),
+                    Text(
+                      '\$${entry.value.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+      loading: () => const SizedBox.shrink(),
+      error: (e, s) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class MonthlyTrendChart extends ConsumerWidget {
+  const MonthlyTrendChart({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final monthlyData = ref.watch(monthlySpendingProvider);
+
+    if (monthlyData.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Monthly Trend (Last 6 Months)',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: FlTitlesData(
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index < 0 || index >= monthlyData.length) {
+                          return const SizedBox.shrink();
+                        }
+                        return Text(
+                          monthlyData[index].month,
+                          style: const TextStyle(fontSize: 10),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                minX: 0,
+                maxX: (monthlyData.length - 1).toDouble(),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: monthlyData.asMap().entries.map((entry) {
+                      return FlSpot(entry.key.toDouble(), entry.value.amount);
+                    }).toList(),
+                    isCurved: true,
+                    color: Theme.of(context).colorScheme.primary,
+                    barWidth: 3,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

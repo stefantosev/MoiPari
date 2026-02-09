@@ -12,10 +12,10 @@ class AuthService {
   }
 
   static Future<Map<String, dynamic>> register(
-      String email,
-      String password,
-      String name,
-      ) async {
+    String email,
+    String password,
+    String name,
+  ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/register'),
       headers: {'Content-Type': 'application/json'},
@@ -30,9 +30,9 @@ class AuthService {
   }
 
   static Future<Map<String, dynamic>> login(
-      String email,
-      String password,
-      ) async {
+    String email,
+    String password,
+  ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
@@ -66,13 +66,19 @@ class AuthService {
   }
 
   static Map<String, String> get authHeaders {
-    if (_token == null) {
-      throw Exception('No token available. User not authenticated.');
+    // if (_token == null) {
+    //   throw Exception('No token available. User not authenticated.');
+    // }
+    // return {
+    //   'Content-Type': 'application/json',
+    //   'Authorization': 'Bearer $_token',
+    // };
+
+    final headers = {'Content-Type': 'application/json'};
+    if (_token != null && _token!.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $_token';
     }
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_token',
-    };
+    return headers;
   }
 
   static bool get isLoggedIn => _token != null;
